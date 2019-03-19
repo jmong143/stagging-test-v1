@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 require('dotenv').config();
 
-const Auth = {
+const SessionController = {
 	validateToken: function(req, res, next){		
 		let token = req.headers['token'];
 		let clientid = req.headers['x-client-id'];
@@ -25,7 +25,7 @@ const Auth = {
 			}else {
 				User.findOne({ _id: decoded._id }).then(function (user) {
 					if ( user.isAdmin === false) {
-						console.log(user);
+						//console.log(user);
 						next();
 					} else {
 						res.status(500).send({ 
@@ -93,7 +93,7 @@ const Auth = {
 			}else {
 				User.findOne({ _id: decoded._id }).then(function (user) {
 					if ( user.isAdmin === true) {
-						console.log(user);
+						//console.log(user);
 						next();
 					} else {
 						res.status(500).send({ 
@@ -107,4 +107,4 @@ const Auth = {
 	},
 }
 
-module.exports = Auth;
+module.exports = SessionController;

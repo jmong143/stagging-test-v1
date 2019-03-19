@@ -7,8 +7,9 @@ const DailyTipsController = require('./controllers/DailyTipsController');
 router.post('/', SessionController.validateApp, SessionController.validateAdminToken, DailyTipsController.createDailyTips);
 router.get('/', SessionController.validateApp, SessionController.validateAdminToken, DailyTipsController.getTips);
 router.put('/:dailyTipsId', SessionController.validateApp, SessionController.validateAdminToken, DailyTipsController.updateDailyTips);
+router.delete('/:dailyTipsId', SessionController.validateApp, SessionController.validateAdminToken, DailyTipsController.archiveDailyTips);
 
 /* Front Get Daily Tips */
-router.get('/random', SessionController.validateApp, SessionController.validateToken, DailyTipsController.getDailyTips);
+router.get('/random', SessionController.validateApp, DailyTipsController.getDailyTips);
 
 module.exports = router;

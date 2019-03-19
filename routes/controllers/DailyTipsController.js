@@ -24,7 +24,7 @@ const DailyTipsController = {
 	},
 
 	getTips: function (req, res) {
-		DailyTips.find().exec(function(err, tips) {
+		DailyTips.find({}).exec(function(err, tips) {
 			let newBody = {
 				tips: [],
 				total: tips.length
@@ -32,7 +32,8 @@ const DailyTipsController = {
 			tips.forEach((tip)=>{
 				newBody.tips.push({
 					id: tip._id,
-					tip: tip.tip
+					tip: tip.tip,
+					isArchive: tip.isArchive
 				});
 			});
 			res.status(200).json(newBody);
@@ -40,7 +41,10 @@ const DailyTipsController = {
 	},
 
 	getDailyTips: function (req, res) {
-		DailyTips.aggregate([ { $sample: {size: 1} }]).exec(function(err, tip) {
+		DailyTips.aggregate([ 
+			{ $match: { isArchive: false }},
+			{ $sample: {size: 1} }			  
+		]).exec(function(err, tip) {
 			let newBody = {
 				id: tip[0]._id,
 				tip: tip[0].tip
@@ -51,6 +55,40 @@ const DailyTipsController = {
 
 	updateDailyTips: function (req, res) {
 		// Update Daily Tips
+		DailyTips.findOneAndUpdate(
+			{ _id: req.params.dailyTipsId }, 
+			{"$set": req.body },
+			{"new":true},
+			function(err, result) {
+				if (!result) {
+					res.status(500).json({
+						message: "Daily tip does not exist."
+					});
+				} else {
+					res.status(200).json({
+						message: 'Daily Tip has been successfuly updated.'
+					});
+				}
+		});
+	},
+
+	archiveDailyTips: function (req, res) {
+		// Archive Daily Tips
+		DailyTips.findOneAndUpdate(
+			{ _id: req.params.dailyTipsId }, 
+			{"$set": { isArchive: true } },
+			{"new":true},
+			function(err, result) {
+				if (!result) {
+					res.status(500).json({
+						message: "Daily tip does not exist."
+					});
+				} else {
+					res.status(200).json({
+						message: 'Daily Tip has been successfuly archived.'
+					});
+				}
+			});
 	}
 }
 

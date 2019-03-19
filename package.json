@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node ./bin/www"
   },
   "dependencies": {
     "bcrypt": "^3.0.4",
@@ -20,6 +20,7 @@
     "mongoose": "*",
     "mongoose-timestamp": "*",
     "morgan": "~1.9.0",
+    "nodemailer": "^5.1.1",
     "nodemon": "^1.18.10"
   }
 }

@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const SessionController = require('./controllers/SessionController');
-const SubjectController = require('./controllers/SubjectController');
+const SubjectCodeController = require('./controllers/SubjectCodeController');
 
-/* Profile Management */
-router.post('/', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.createSubject);
-router.get('/', SessionController.validateApp, SessionController.validateToken, SubjectController.getSubjects);
-router.get('/:subjectId', SessionController.validateApp, SessionController.validateToken, SubjectController.getSubject);
-
-/* Subject Management */
+/* SubjectCode Management Admin */
+router.post('/generate', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.generateSubjectCode);
+router.get('/', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.getSubjectCodes);
+router.get('/:subjectCodeId', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.getSubjectCode);
 
 module.exports = router;

@@ -92,8 +92,41 @@ const ProfileController = {
 
 	updateProfile: function (req, res) {
 		// Update Profile
-	},
-	
+		let token = req.headers['token'];
+		if (!token){
+			return res.status(401).send({ auth: false, message: 'No token provided.' })
+		};
+
+		jwt.verify(token, config.secret, function(err, decoded) {
+			if (err) {
+				return res.status(401).send({ 
+					auth: false, 
+					message: 'Failed to authenticate token.' 
+				});
+			} else {	
+				Profile.findOneAndUpdate(
+					{ userId: decoded._id },
+					{ "$set": {
+						age: req.body.age,
+						gender: req.body.gender,
+						school: req.body.school,
+						updatedAt: Date.now()
+					}},{ "new": true }, 
+					function(err, result){
+						
+						if (!result) {
+							res.status(500).json({
+								message: "Profile Does not exist."
+							});
+						} else {
+							res.status(200).json({
+								message: 'Profile successfuly updated.'
+							});
+						}
+					});	
+			}
+		});
+	},	
 }
 
 module.exports = ProfileController;

@@ -8,7 +8,8 @@ const user = mongoose.Schema({
    lastName: { type: String, required: true },
    subjectCode: {type: String, required: false },
    isAdmin: {type: Boolean, required: true },
-   createdAt: {type: Date, default: Date.now }
+   createdAt: {type: Date, default: Date.now },
+   isActive: {type: Boolean, default: true}
 });
 
 module.exports = mongoose.model('User', user);

@@ -16,6 +16,9 @@ const mongoose = require('mongoose');
 
 const cors = require('cors');
 
+
+let dbConnection = false;
+
 /* MongoDB Atlas*/
 
 const uri = 'mongodb://pinnacle:Qwe12345@'+
@@ -26,13 +29,18 @@ const uri = 'mongodb://pinnacle:Qwe12345@'+
 mongoose.connect(uri, { useNewUrlParser: true }, function(err) {
 	if (err) throw err;
 	console.log('Connected to DB');
+	dbConnection = true;
 });
 
 /* MongoDb Local */
-// mongoose.connect(config.db.host + config.db.database, function (err) {
+
+// mongoose.connect(config.db.host + config.db.database, { useNewUrlParser: true }, function (err) {
 //    if (err) throw err;
 //    console.log('Connected to DB');
+//    dbConnection = true;
 // });
+
+mongoose.set('useCreateIndex', true);
 
 let db = mongoose.connection;
 
@@ -48,12 +56,20 @@ app.use('/auth', auth);
 app.use('/profile', profile);
 app.use('/subjects', subjects);
 app.use('/tips', dailyTips);
-app.use('/subjects/codes', subjectCode);
+app.use('/admin/subjects/codes', subjectCode);
+
+/* Service Status*/
 
 app.get('/status', function(req, res){
-   res.json({
-      "status": "Green"
-   });
+   	if (dbConnection) {
+		res.status(200).json({
+			"message": "API is Running and DB Connection is Up."
+		});	
+   	} else {
+   		res.status(500).json({
+   			"message": "Database Connection Error"
+   		});	
+    }   
 });
 
 app.listen(config.server.port, function(){

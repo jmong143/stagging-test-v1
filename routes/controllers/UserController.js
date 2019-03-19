@@ -2,12 +2,25 @@ const User = require('../../models/Users');
 const Profile = require('../../models/Profile');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
 
 const UserController = {
 
 	getUsers: function(req, res) {
 		// Query Params to follow & pagination
-		User.find({ isAdmin: false }).exec(function(err, users) {
+
+		let keyword = req.query.keyword;
+		let query = [{ $match: {isAdmin: false} }];
+
+		if (keyword) {
+			query.push( {$match:{ $or: [
+					{"firstName": {'$regex': '^'+keyword, '$options' : 'i'}},
+					{"lastName":{'$regex': '^'+ keyword, '$options' : 'i'}},
+					{"email": {'$regex': '^'+keyword, '$options' : 'i'}}
+				]} 
+			});s
+		}
+		User.aggregate(query).exec(function(err, users) {
 			let newBody = {
 				users: [],
 				total: users.length
@@ -42,14 +55,16 @@ const UserController = {
 					school: profile.school || '',
 					subjects: profile.subjects || '',
 					updatedAt: profile.updatedAt || '',
-					createdAt: user.createdAt || ''
+					createdAt: user.createdAt || '',
+					isActive: user.isActive || ''
 				});
 			});		
 		});	
 	},
 
 	createUser: function (req, res) {
-		bcrypt.hash(req.body.password, 10, function(err, hash){
+		let _password = Math.random().toString(36).substr(2, 10).toUpperCase();
+		bcrypt.hash(_password, 10, function(err, hash){
 			if (err) {
 				return res.status(400).json({
 					error: err
@@ -66,8 +81,29 @@ const UserController = {
 				});
 				
 				_user.save().then(function (result) {
-					res.status(200).json({
-						message: 'New user has been created.'
+					// Mail the password to the email
+					transporter = nodemailer.createTransport({
+					    service: 'Gmail',
+					    auth: {
+					        user: 'pinnaclereviewschool@gmail.com',
+					        pass: 'P1nn@cl3'
+					    }
+					});
+					let mailOptions = {
+						from: '"Pinnacle Review School" <bulawanjp@gmail.com>',  
+						to: result.email,
+						subject: 'Pinnacle App Account Registration',
+						html: '<p>Congratulations! Your Account has been created. <br><br>Temporary Password : ' + _password + '<br><br>Please Change your password using the link below.<br></p>'
+					};
+					transporter.sendMail(mailOptions, function(error, info){
+						if(error){
+							return console.log(error);
+						} else {
+							console.log('Message sent: ' + info.response+ 'password: '+_password);
+							res.status(200).json({
+								message: 'New user has been created.'
+							});
+						} 
 					});
 				}, function (err) {
 					console.log(err);
@@ -79,11 +115,11 @@ const UserController = {
 		});
 	},
 
-	addSubjectCode: function (req, res) {
-		// Add subject code for a user
+	activateSubjectCode: function (req, res) {
+		// Activate subject code for a user
 	},
 
-	deleteUser: function(req, res) {
+	deactivateUser: function(req, res) {
 		// Delete User
 	}	
 }
