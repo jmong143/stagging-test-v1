@@ -18,9 +18,8 @@ const SessionController = {
 
 		jwt.verify(token, config.secret, function(err, decoded) {
 			if (err) {
-				return res.status(500).send({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
+				return res.status(401).send({ 
+					message: 'Unauthorized.'
 				});
 			}else {
 				User.findOne({ _id: decoded._id }).then(function (user) {
@@ -28,8 +27,7 @@ const SessionController = {
 						//console.log(user);
 						next();
 					} else {
-						res.status(500).send({ 
-							auth: false, 
+						res.status(401).send({ 
 							message: 'Unauthorized.' 
 						});
 					}
@@ -47,28 +45,24 @@ const SessionController = {
 
 		if (!clientid){
 			return res.status(401).send({ 
-				auth: false, 
 				message: 'Client ID is missing.' 
 			});
 		};
 
 		if (!clientsecret){
 			return res.status(401).send({ 
-				auth: false, 
 				message: 'Client Secret is missing.' 
 			});
 		};
 
 		if(clients.indexOf(clientid) == -1){
 			return res.status(401).send({ 
-				auth: false, 
 				message: 'Client ID is invalid.' 
 			});
 		}
 
 		if(config.secret !== clientsecret){
 			return res.status(401).send({ 
-				auth: false, 
 				message: 'Client Secret is invalid.' 
 			});
 		}
@@ -81,14 +75,13 @@ const SessionController = {
 		let clientsecret = req.headers['x-client-secret'];
 
 		if (!token){
-			return res.status(401).send({ auth: false, message: 'No token provided.' })
+			return res.status(401).send({ message: 'No token provided.' })
 		};
 
 		jwt.verify(token, config.secret, function(err, decoded) {
 			if (err) {
-				return res.status(500).send({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
+				res.status(401).send({ 
+					message: 'Unauthorized.' 
 				});
 			}else {
 				User.findOne({ _id: decoded._id }).then(function (user) {
@@ -96,8 +89,7 @@ const SessionController = {
 						//console.log(user);
 						next();
 					} else {
-						res.status(500).send({ 
-							auth: false, 
+						res.status(401).send({ 
 							message: 'Unauthorized.' 
 						});
 					}

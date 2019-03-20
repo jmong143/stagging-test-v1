@@ -19,7 +19,7 @@ const AuthController = {
 					
 					if(err) {
 						return res.status(401).json({
-							message: 'Incorrect Password'
+							message: 'Username/Password is incorrect.'
 						});
 					}
 
@@ -41,7 +41,7 @@ const AuthController = {
 					}
 
 					return res.status(401).json({
-						message: 'Incorrect Password'
+						message: 'Username/Password is incorrect.'
 					});
 				});
 			} else {
@@ -51,11 +51,8 @@ const AuthController = {
 			}
 		})
 		.catch(error => {
-			res.status(500).json({
-				error: {
-					'email':req.body.email,
-					'errorMessage':'User does not exist.'
-				}
+			res.status(401).json({
+					message: 'Unauthorized'
 			});
 		});
 	},
@@ -70,7 +67,7 @@ const AuthController = {
 				bcrypt.compare(req.body.password, user.password, function(err, result) {
 					if(err) {
 						return res.status(401).json({
-							message: 'Incorrect Password'
+							message: 'Username/Password is incorrect.'
 						});
 					}
 
@@ -96,7 +93,7 @@ const AuthController = {
 					}
 
 					return res.status(401).json({
-						message: 'Incorrect Password'
+						message: 'Username/Password is incorrect.'
 					});
 				});
 			} else {
@@ -106,11 +103,8 @@ const AuthController = {
 			}		
 		})
 		.catch(error => {
-			res.status(500).json({
-				error: {
-					'email':req.body.email,
-					'errorMessage':'User does not exist.'
-				}
+			res.status(401).json({
+				message: 'Unauthorized'	
 			});
 		});
 	},
@@ -124,8 +118,8 @@ const AuthController = {
 	register: function(req, res) {
 		bcrypt.hash(req.body.password, 10, function(err, hash){
 			if (err) {
-				return res.status(400).json({
-					error: err
+				return res.status(500).json({
+					message: 'Internal Server Error'
 				})
 			} else {
 				const _user = new User({
@@ -145,7 +139,7 @@ const AuthController = {
 				}, function (err) {
 					console.log(err);
 					res.status(500).json({
-						error: err
+						message: 'Email address already taken.'
 					});
 				});
 			}
@@ -156,8 +150,8 @@ const AuthController = {
 	adminRegister: function(req, res) {
 		bcrypt.hash(req.body.password, 10, function(err, hash){
 			if (err) {
-				return res.status(400).json({
-					error: err
+				return res.status(500).json({
+					message: 'Internal Server Error'
 				})
 			} else {
 				const _user = new User({
@@ -176,8 +170,8 @@ const AuthController = {
 					});
 				}, function (err) {
 					console.log(err);
-					res.status(500).json({
-						error: err
+					res.status(401).json({
+						message: 'Email address already taken.'
 					});
 				});
 			}
@@ -192,23 +186,22 @@ const AuthController = {
 
 		jwt.verify(token, config.secret, function(err, decoded) {
 			if (err) {
-				return res.status(500).send({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
+				return res.status(401).send({ 
+					message: 'Unauthorized' 
 				});
 			} else {
 				User.findOne({ _id: decoded._id }).exec(function(err, result){
 					bcrypt.compare( _password, result.password, function (err, result){
 						// console.log(result);
 						if (!result) {
-							res.status(500).json({
+							res.status(400).json({
 								message: "Password is incorrect."
 							});
 						} else {
 							bcrypt.hash( _newPassword, 10, function(err, hash){
 								if (err){
 									return res.status(500).json({
-										error: err
+										message: 'Someting went wrong.'
 									})
 								} else {
 									User.findOneAndUpdate(
@@ -218,7 +211,7 @@ const AuthController = {
 										function(err, result) {
 											if (err) {
 												res.status(500).json({
-													error : "Something went wrong."
+													message : "Something went wrong."
 												});
 											} else {
 												res.status(200).json({
