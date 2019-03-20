@@ -86,7 +86,11 @@ const AuthController = {
 							//86400
 						return res.status(200).json({
 							token: JWTToken,
-							user: user.email,
+							user: {
+								email: user.email,
+								firstName: user.firstName,
+								lastName: user.lastName
+							},
 							expiresIn: new Date(Date.now()+(43200*1000))
 						});
 					}
