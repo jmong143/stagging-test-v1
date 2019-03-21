@@ -14,43 +14,43 @@ const HomepageController = {
 	getHomepage: async (req, res) => {
 
 		let token = req.headers['token'];
-
+		let decoded, user, profile, subjectCode, recent, announcements, updates;
 		// Homepage Get
 		try {
-			const decoded = await jwt.verify(token, config.secret);
-			const user = await User.findOne({ _id: decoded._id });
-			const profile = await Profile.findOne({ userId: decoded._id});
-			const subjectCode = await SubjectCode.findOne({ userId: decoded._id});
+			decoded = await jwt.verify(token, config.secret);
+			user = await User.findOne({ _id: decoded._id });
+			profile = await Profile.findOne({ userId: decoded._id}) || {};
+			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
 			// To Follow:
-			const recent = {};
-			const announcements = {};
-			const updates = {};
+			recent = {};
+			announcements = {};
+			updates = {};
 
+		}catch(err){
+			res.status(500).json({
+				message: 'Something went wrong.'
+			});
+		} finally {
 			res.status(200).json({
 				user: {
 					id: user._id,
 					email: user.email,
 					firstName: user.firstName,
 					lastName: user.lastName,
-					age: profile.age,
-					gender: profile.gender,
-					school: profile.school,
-					updatedAt: profile.updatedAt,
+					age: profile.age || '',
+					gender: profile.gender || '',
+					school: profile.school || '',
+					updatedAt: profile.updatedAt || '',
 				},
 				subjects: {
-					subjectCode: subjectCode.subjectCode,
-					list: subjectCode.subjects,
-					activatedAt: subjectCode.activatedAt,
-					expiresAt: subjectCode.expiresAt
+					subjectCode: subjectCode.subjectCode || '',
+					list: subjectCode.subjects || '',
+					activatedAt: subjectCode.activatedAt || '',
+					expiresAt: subjectCode.expiresAt || ''
 				},
 				recentActivities: recent,
 				announcements: announcements,
 				updates: updates
-			});
-
-		}catch(err){
-			res.status(500).json({
-				message: 'Something went wrong.'
 			});
 		};
 	}	

@@ -52,36 +52,35 @@ const ProfileController = {
 		// Get Profile
 
 		let token = req.headers['token'];
-		
+		let decoded, user, profile, subjectCode
+
 		try {
-
-			const decoded = await jwt.verify(token, config.secret);
-			const user = await User.findOne({ _id: decoded._id });
-			const profile = await Profile.findOne({ userId: decoded._id});
-			const subjectCode = await SubjectCode.findOne({ userId: decoded._id});
-
+			decoded = await jwt.verify(token, config.secret);
+			user = await User.findOne({ _id: decoded._id });
+			profile = await Profile.findOne({ userId: decoded._id}) || {};
+			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
+		} catch(e) {
+			res.status(500).json({
+				message: 'Profile not found.'
+			});
+		} finally {
 			res.status(200).json({
 				user: {
 					id: user._id,
 					email: user.email,
-					firstName: user.firstName,
-					lastName: user.lastName,
-					age: profile.age,
-					gender: profile.gender,
-					school: profile.school,
-					updatedAt: profile.updatedAt,
+					firstName: user.firstName || '',
+					lastName: user.lastName || '',
+					age: profile.age || '',
+					gender: profile.gender || '',
+					school: profile.school || '',
+					updatedAt: profile.updatedAt || '',
 				},
 				subjects: {
-					subjectCode: subjectCode.subjectCode,
-					list: subjectCode.subjects,
-					activatedAt: subjectCode.activatedAt,
-					expiresAt: subjectCode.expiresAt
+					subjectCode: subjectCode.subjectCode || '',
+					list: subjectCode.subjects || '',
+					activatedAt: subjectCode.activatedAt || '',
+					expiresAt: subjectCode.expiresAt || ''
 				}
-			});
-
-		} catch(e) {
-			res.status(500).json({
-				message: 'Profile not found.'
 			});
 		}
 	},
