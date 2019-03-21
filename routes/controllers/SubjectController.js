@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const SubjectController = {
 
-	createSubject: function (req, res) {
+	createSubject: (req, res) => {
 		// Create new Subject
 		const _subject = new Subject ({
 			_id: new mongoose.Types.ObjectId(),
@@ -25,7 +25,7 @@ const SubjectController = {
 		});
 	},
 
-	getSubjects: function (req, res) {
+	getSubjects: (req, res) => {
 		Subject.find().exec(function(err, subjects) {
 			let newBody = {
 				subjects: [],
@@ -41,7 +41,7 @@ const SubjectController = {
 		});
 	},
 
-	getSubject: function (req, res) {
+	getSubject: (req, res) => {
 		Subject.findOne({_id: req.params.subjectId }).exec(function (err, subject) {
 			res.status(200).json({
 				id: subject._id,

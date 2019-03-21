@@ -1,4 +1,5 @@
 const Profile = require('../../models/Profile');
+const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
@@ -8,9 +9,6 @@ const ProfileController = {
 
 	createProfile: function (req, res) {
 		let token = req.headers['token'];
-		if (!token){
-			return res.status(401).send({ auth: false, message: 'No token provided.' })
-		};
 
 		jwt.verify(token, config.secret, function(err, decoded) {
 			if (err) {
@@ -50,82 +48,69 @@ const ProfileController = {
 		});
 	},
 
-	getProfile : function(req, res) {
-		// Get Profile + Populate
-		let newBody = {};
+	getProfile : async (req, res) => {
+		// Get Profile
+
 		let token = req.headers['token'];
-		if (!token){
-			return res.status(401).send({ auth: false, message: 'No token provided.' })
-		};
+		
+		try {
 
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
-				return res.status(500).send({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
-				});
-			} else {
+			const decoded = await jwt.verify(token, config.secret);
+			const user = await User.findOne({ _id: decoded._id });
+			const profile = await Profile.findOne({ userId: decoded._id});
+			const subjectCode = await SubjectCode.findOne({ userId: decoded._id});
 
-				Profile.findOne({ userId: decoded._id }).exec(function(err, profile){
-					if(!profile)
-						res.status(400).json({ message: "Profile not found."})
-					else {
-						User.findOne({ _id: decoded._id}).exec(function(err,user){
-							res.status(200).json({
-								firstName: user.firstName,
-								lastName: user.lastName,
-								email: user.email,
-								age: profile.age,
-								gender: profile.gender,
-								school: profile.school,
-								subjects: profile.subjects,
-								updatedAt: profile.updatedAt || '',
-								createdAt: profile.createdAt || ''
-							});
-						});	
-					}
-					
-				});
-			}
-		});
+			res.status(200).json({
+				user: {
+					id: user._id,
+					email: user.email,
+					firstName: user.firstName,
+					lastName: user.lastName,
+					age: profile.age,
+					gender: profile.gender,
+					school: profile.school,
+					updatedAt: profile.updatedAt,
+				},
+				subjects: {
+					subjectCode: subjectCode.subjectCode,
+					list: subjectCode.subjects,
+					activatedAt: subjectCode.activatedAt,
+					expiresAt: subjectCode.expiresAt
+				}
+			});
+
+		} catch(e) {
+			res.status(500).json({
+				message: 'Profile not found.'
+			});
+		}
 	},
 
-	updateProfile: function (req, res) {
+	updateProfile: async (req, res) => {
 		// Update Profile
 		let token = req.headers['token'];
-		if (!token){
-			return res.status(401).send({ auth: false, message: 'No token provided.' })
-		};
 
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
-				return res.status(401).send({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
-				});
-			} else {	
-				Profile.findOneAndUpdate(
-					{ userId: decoded._id },
-					{ "$set": {
-						age: req.body.age,
-						gender: req.body.gender,
-						school: req.body.school,
-						updatedAt: Date.now()
-					}},{ "new": true }, 
-					function(err, result){
-						
-						if (!result) {
-							res.status(500).json({
-								message: "Profile Does not exist."
-							});
-						} else {
-							res.status(200).json({
-								message: 'Profile successfuly updated.'
-							});
-						}
-					});	
-			}
-		});
+		try {
+			
+			const decoded = await jwt.verify(token, config.secret);
+			const updateProfile = await Profile.findOneAndUpdate(
+				{ userId: decoded._id },
+				{ "$set": {
+					age: req.body.age,
+					gender: req.body.gender,
+					school: req.body.school,
+					updatedAt: Date.now()
+				}},{ "new": true });
+		
+			res.status(200).json({
+				message: 'Profile successfuly updated.'
+			});
+
+		} catch(e) {
+			res.status(500).json({
+				message: 'Profile not found'
+			});
+		}
 	},	
 }
 

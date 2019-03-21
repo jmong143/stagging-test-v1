@@ -6,7 +6,6 @@ const profile = mongoose.Schema({
    age: {type: Number, required: false },
    gender: {type: String, required: false },
    school: {type: String, required: false },
-   subjects: {type: Array, required: false },
    updatedAt: { type: Date, default: Date.now },
    createdAt: { type: Date, default: Date.now }
 });

@@ -1,5 +1,7 @@
-//Model
+/* Model Required */
 const User = require('../../models/Users');
+
+/* Dependencies Required */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -128,7 +130,7 @@ const AuthController = {
 					password: hash,
 					firstName: req.body.firstName,
 					lastName: req.body.lastName,
-					subjects: req.body.subjectCode,
+					subjects: req.body.subjectCode || '',
 					isAdmin: false					
 				});
 				
@@ -139,7 +141,7 @@ const AuthController = {
 				}, function (err) {
 					console.log(err);
 					res.status(500).json({
-						message: 'Email address already taken.'
+						message: err
 					});
 				});
 			}

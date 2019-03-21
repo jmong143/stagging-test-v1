@@ -7,39 +7,34 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const SessionController = {
-	validateToken: function(req, res, next){		
+	
+	validateToken: async (req, res, next) => {		
 		let token = req.headers['token'];
-		let clientid = req.headers['x-client-id'];
-		let clientsecret = req.headers['x-client-secret'];
-
 		if (!token){
-			return res.status(401).send({ auth: false, message: 'Missing token.' })
+			return res.status(401).send({ message: 'Token is Required.' })
 		};
 
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
-				return res.status(401).send({ 
-					message: 'Unauthorized.'
-				});
-			}else {
-				User.findOne({ _id: decoded._id }).then(function (user) {
-					if ( user.isAdmin === false) {
-						//console.log(user);
-						next();
-					} else {
-						res.status(401).send({ 
-							message: 'Unauthorized.' 
-						});
-					}
+		try {
+			const decoded = await jwt.verify(token, config.secret);
+			const user = await User.findOne({ _id: decoded._id });
+
+			if (user.isAdmin === false) {
+				next();
+			} else {
+				res.status(401).send({ 
+					message: 'Unauthorized.' 
 				});
 			}
-		});
+
+		} catch (e) {
+			res.status(401).send({ 
+				message: 'Unauthorized.' 
+			});
+		}
 	},
 
-	validateApp: function(req, res, next){
-		require('dotenv').config();
+	validateApp: (req, res, next) => {
 		let clients = config.clients.split(',');
-
 		let clientid = req.headers['x-client-id'];
 		let clientsecret = req.headers['x-client-secret'];
 
@@ -69,33 +64,30 @@ const SessionController = {
 
 		next();
 	},
-	validateAdminToken: function(req, res, next){		
-		let token = req.headers['token'];
-		let clientid = req.headers['x-client-id'];
-		let clientsecret = req.headers['x-client-secret'];
 
+	validateAdminToken: async (req, res, next) => {		
+		let token = req.headers['token'];
 		if (!token){
-			return res.status(401).send({ message: 'No token provided.' })
+			return res.status(401).send({ message: 'Token is Required.' })
 		};
 
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
+		try {
+			const decoded = await jwt.verify(token, config.secret);
+			const user = await User.findOne({ _id: decoded._id });
+
+			if (user.isAdmin === true) {
+				next();
+			} else {
 				res.status(401).send({ 
 					message: 'Unauthorized.' 
 				});
-			}else {
-				User.findOne({ _id: decoded._id }).then(function (user) {
-					if ( user.isAdmin === true) {
-						//console.log(user);
-						next();
-					} else {
-						res.status(401).send({ 
-							message: 'Unauthorized.' 
-						});
-					}
-				});
 			}
-		});
+
+		} catch (e) {
+			res.status(401).send({ 
+				message: 'Unauthorized.' 
+			});
+		}
 	},
 }
 

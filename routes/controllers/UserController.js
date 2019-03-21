@@ -1,12 +1,15 @@
-const User = require('../../models/Users');
-const Profile = require('../../models/Profile');
+/* Dependencies */
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 
+/*Models*/
+const User = require('../../models/Users');
+const Profile = require('../../models/Profile');
+
 const UserController = {
 
-	getUsers: function(req, res) {
+	getUsers: (req, res) => {
 		// Query Params to follow & pagination
 
 		let keyword = req.query.keyword;
@@ -39,7 +42,8 @@ const UserController = {
 		});
 	},
 
-	getUser: function (req, res) {
+	getUser: (req, res) => {
+
 		Profile.findOne({ userId: req.params.userId }).exec(function(err, profile){
 			let _profile = {};
 			if (!profile) {
@@ -53,7 +57,7 @@ const UserController = {
 					age: profile.age || '',
 					gender: profile.gender || '',
 					school: profile.school || '',
-					subjects: profile.subjects || '',
+					subjectCode: user.subjectCode || '',
 					updatedAt: profile.updatedAt || '',
 					createdAt: user.createdAt || '',
 					isActive: user.isActive || ''
@@ -113,10 +117,6 @@ const UserController = {
 				});
 			}
 		});
-	},
-
-	activateSubjectCode: function (req, res) {
-		// Activate subject code for a user
 	},
 
 	deactivateUser: function(req, res) {
