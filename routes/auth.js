@@ -7,7 +7,7 @@ const SessionController = require('./controllers/SessionController');
 router.post('/login', SessionController.validateApp, AuthController.login);
 router.post('/register', SessionController.validateApp, AuthController.register);
 router.post('/password/reset', SessionController.validateApp, AuthController.resetPassword);
-router.post('/password/change', SessionController.validateApp, SessionController.validateToken, AuthController.changePassword);
+router.post('/password/change', SessionController.validateApp, AuthController.changePassword);
 router.get('/sessions/validate', SessionController.validateApp, SessionController.validateToken, function (req ,res) {
 	res.status(200).json({
 		auth: true,

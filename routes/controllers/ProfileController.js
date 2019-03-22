@@ -7,47 +7,6 @@ const config = require('../../config').auth;
 
 const ProfileController = {
 
-	createProfile: function (req, res) {
-		let token = req.headers['token'];
-
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
-				return res.status(401).send({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
-				});
-			} else {
-				// Validate if user has an existing profile
-				Profile.findOne({ userId: decoded._id }).exec(function(err, profile){
-					if (profile) {
-						res.status(400).json({ message: "Profile Aleady Exists."})
-					} else {
-						// Save User Profile
-						const _profile = new Profile ({
-							_id: new mongoose.Types.ObjectId(),
-							userId: decoded._id,
-							age: req.body.age,
-							gender: req.body.gender,
-							school: req.body.school,
-							subjects: []
-						});
-
-						_profile.save().then(function (result) { 
-								res.status(200).json({
-								message: 'Profile has been created.'
-							});
-						}, function (err) {
-							console.log(err);
-							res.status(500).json({
-								error: err
-							});
-						});
-					}
-				});	
-			}
-		});
-	},
-
 	getProfile : async (req, res) => {
 		// Get Profile
 
@@ -59,10 +18,6 @@ const ProfileController = {
 			user = await User.findOne({ _id: decoded._id });
 			profile = await Profile.findOne({ userId: decoded._id}) || {};
 			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
-		} catch(e) {
-			res.status(500).json({
-				message: 'Profile not found.'
-			});
 		} finally {
 			res.status(200).json({
 				user: {
@@ -88,27 +43,44 @@ const ProfileController = {
 	updateProfile: async (req, res) => {
 		// Update Profile
 		let token = req.headers['token'];
-
+		let decoded, checkProfile;
+		
 		try {
 			
-			const decoded = await jwt.verify(token, config.secret);
-			const updateProfile = await Profile.findOneAndUpdate(
-				{ userId: decoded._id },
-				{ "$set": {
-					age: req.body.age,
-					gender: req.body.gender,
-					school: req.body.school,
-					updatedAt: Date.now()
-				}},{ "new": true });
-		
-			res.status(200).json({
-				message: 'Profile successfuly updated.'
-			});
+			decoded = await jwt.verify(token, config.secret);
+			checkProfile = await Profile.findOne({ userId: decoded._id});
 
-		} catch(e) {
-			res.status(500).json({
-				message: 'Profile not found'
-			});
+		} finally {
+			/*  Update if there is an existing profile */	
+			if (checkProfile) {
+				await Profile.findOneAndUpdate(
+					{ userId: decoded._id },
+					{ "$set": {
+						age: req.body.age,
+						gender: req.body.gender,
+						school: req.body.school,
+						updatedAt: Date.now()
+					}},{ "new": true });
+			
+				res.status(200).json({
+					message: 'Profile successfuly updated.'
+				});
+			} else {
+				/* Create new Profile if no existing */
+				const _profile = new Profile ({
+						_id: new mongoose.Types.ObjectId(),
+						userId: decoded._id,
+						age: req.body.age,
+						gender: req.body.gender,
+						school: req.body.school
+					});
+
+				await _profile.save() 
+				res.status(200).json({
+					message: 'Profile has been created.'
+				});
+			}
+			
 		}
 	},	
 }

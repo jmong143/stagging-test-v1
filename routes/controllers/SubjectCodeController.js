@@ -47,22 +47,31 @@ const SubjectController = {
 		}	
 	},
 
-	getSubjectCodes: (req, res) => {
-		SubjectCode.find().exec(function(err, subjectCodes) {
-			let newBody = {
-				subjectCodes: [],
-				total: subjectCodes.length
-			};
-			subjectCodes.forEach((subjectCode)=>{
-				newBody.subjectCodes.push({
-					id: subjectCode._id,
-					subjectCode: subjectCode.subjectCode,
-					userId: subjectCode.userId || '',
-					subjects: subjectCode.subjects
+	getSubjectCodes: async (req, res) => {
+
+		let subjectCodes;
+		let newBody = {
+			list: [],
+			total: 0
+		};
+		try {
+			subjectCodes = await SubjectCode.find();
+		} finally {
+			if (!subjectCodes) {
+				res.status(200).json(newBody);
+			} else if (subjectCodes.length > 0) {
+				subjectCodes.forEach((subjectCode)=>{
+					newBody.list.push({
+						id: subjectCode._id,
+						subjectCode: subjectCode.subjectCode,
+						userId: subjectCode.userId || '',
+						subjects: subjectCode.subjects
+					});
 				});
-			});
-			res.status(200).json(newBody);
-		});
+				newBody.total = subjectCodes.length;
+				res.status(200).json(newBody);
+			}		
+		}
 	},
 
 	getSubjectCode: (req, res) => {
@@ -79,82 +88,75 @@ const SubjectController = {
 		});
 	},
 
-	activateSubjectCode: function (req, res) {
+	activateSubjectCode: async (req, res) => {
 		let token = req.headers['token'];
-		if (!token){
-			res.status(401).json({ auth: false, message: 'No token provided.' })
-		};
+		let decoded, user, subjectCode, userResult, subjectCodeResult;
 
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
+		try {
+			decoded = await jwt.verify(token, config.secret);
+			user = await User.findOne({ _id: decoded._id});
+			subjectCode = await SubjectCode.findOne({ subjectCode: req.body.subjectCode});
+			
+		} finally {
+			// Validate User
+			if (!user || !decoded) {
 				res.status(401).json({ 
-					auth: false, 
-					message: 'Failed to authenticate token.' 
-				});
-			} else {
-
-				// Validate if the user already has a subject code
-				User.findOne({ _id: decoded._id}).exec(function(err, user){
-					console.log(user);
-					if(user.subjectCode){
-						return res.status(400).json({ 
-							message: 'You already have a subject code.' 
-						});	
-					} else {
-						SubjectCode.findOne({ subjectCode: req.body.subjectCode}).exec(function(err, subjectCode){
-							if (!subjectCode) {
-								return res.status(400).json({ 
-									message: 'Subject code does not exist.' 
-								});	
-							} else if (subjectCode.userId) {
-								return res.status(400).json({ 
-									message: 'Subject code already used.' 
-								});	
-							} else {
-								// Activate Subject Code
-								User.findOneAndUpdate({ _id: decoded._id },
-									{ "$set": {
-										subjectCode: req.body.subjectCode
-									}},{ "new": true }, 
-									function(err, result){
-										if (!result) {
-											res.status(500).json({
-												message: "Something went wrong."
-											});
-										} else {
-											SubjectCode.findOneAndUpdate(
-												{ subjectCode: req.body.subjectCode },
-												{ "$set": {
-													userId: decoded._id,
-													activatedAt: Date.now(),
-													expiresAt: new Date(Date.now()+(43200*1000*2*31*6))
-												}},{ "new": true }, 
-												function(err, result){
-													
-													if (!result) {
-														res.status(500).json({
-															message: "Something went wrong"
-														});
-													} else {
-														res.status(200).json({
-															message: 'Subject Code has been activated.',
-															details: {
-																activatedBy: decoded.email,
-																subjectCode: result.subjectCode,
-																activatedAt: result.activatedAt,
-																expiresAt: result.expiresAt
-															}
-														});
-													}
-												});	
-										}
-									});
-							}
-						});
-					}			
+					message: 'Unauthorized.' 
 				});	
-			}
-		});
+			// Validate if user has a subject code
+			} else if (user.subjectCode) {
+				res.status(400).json({ 
+					message: 'You already have a subject code.' 
+				});
+			// Validate if subject code exists
+			} else if (!subjectCode) {
+				res.status(400).json({ 
+					message: 'Subject code does not exist.' 
+				});
+			// Validate if subject code is already used
+			} else if (subjectCode.userId) {
+				res.status(400).json({ 
+					message: 'Subject code already used.' 
+				});
+			// Activate Subject Code
+			} else if (!subjectCode.userId && !user.subjectCode){
+
+				userResult = await User.findOneAndUpdate({ _id: decoded._id },
+					{ "$set": {
+						subjectCode: req.body.subjectCode
+					}},
+					{ "new": true });
+				
+				subjectCodeResult = await SubjectCode.findOneAndUpdate(
+					{ subjectCode: req.body.subjectCode },
+					{ "$set": {
+						userId: decoded._id,
+						activatedAt: Date.now(),
+						expiresAt: new Date(Date.now()+(43200*1000*2*31*6))
+					}},
+					{ "new": true });
+				// Validate if successful
+				if (userResult && subjectCodeResult) {
+					res.status(200).json({
+						message: 'Subject Code has been activated.',
+						details: {
+							activatedBy: decoded.email,
+							subjectCode: userResult.subjectCode,
+							activatedAt: subjectCodeResult.activatedAt,
+							expiresAt: subjectCodeResult.expiresAt
+						}
+					});
+				} else {
+					res.status(500).json({ 
+						message: 'Something went wrong.' 
+					});
+				}
+			} else {
+				res.status(500).json({ 
+					message: 'Something went wrong.' 
+				});
+			} 
+		}	
 	}
 }
 

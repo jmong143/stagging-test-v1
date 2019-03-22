@@ -18,7 +18,7 @@ const DailyTipsController = {
 					message: 'New Daily Tips has been added.'
 				});	
 			}
-		}catch(err) {
+		} catch(err) {
 			res.status(500).json({
 				message: 'Something went wrong.'
 			});
@@ -26,8 +26,8 @@ const DailyTipsController = {
 	},
 
 	getTips: async (req, res) => {
-		try {
 
+		try {
 			const tips = await DailyTips.find({});
 
 			let newBody = {

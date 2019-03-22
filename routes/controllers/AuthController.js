@@ -10,105 +10,89 @@ const config = require('../../config').auth;
 
 const AuthController = {
 
-	login: function(req, res) {
+	login: async (req, res) => {
 
 		let clientSecret = req.headers['x-client-secret'];
-		User.findOne({email: req.body.email})
-		.exec()
-		.then(function(user) {
-			if(user.isAdmin === false) {
-				bcrypt.compare(req.body.password, user.password, function(err, result) {
-					
-					if(err) {
-						return res.status(401).json({
-							message: 'Username/Password is incorrect.'
-						});
-					}
+		let user, hash;
+		try {
+			
+			user = await User.findOne({email: req.body.email});
+			hash = await bcrypt.compare(req.body.password, user.password);
 
-					if(result){
-						const JWTToken = jwt.sign({
-							email: user.email,
-							_id: user._id
-						},
-						clientSecret,
-						{
-							expiresIn: 43200 
-						});
-							//86400
-						return res.status(200).json({
-							token: JWTToken,
-							user: user.email,
-							expiresIn: new Date(Date.now()+(43200*1000))
-						});
-					}
-
-					return res.status(401).json({
-						message: 'Username/Password is incorrect.'
-					});
+		} finally {
+			// Validate if User exists and password is correct.
+			if (!user || !hash) {
+				res.status(401).json({
+					message: 'Username/Password is incorrect.'
+				});
+			}else if(user.isAdmin === true) {	
+				res.status(401).json({
+					message: 'Unauthorized.'
+				});
+			} else if (user && hash) {
+				const JWTToken =  await jwt.sign({
+					email: user.email,
+					_id: user._id
+				},
+				clientSecret,
+				{
+					expiresIn: 43200 
+				});
+					// 86400 = 24hrs
+				res.status(200).json({
+					token: JWTToken,
+					user: user.email,
+					expiresIn: new Date(Date.now()+(43200*1000))
 				});
 			} else {
-				res.status(401).json({
-					message: 'Unauthorized'
+				res.status(500).json({
+					message: 'Someting went wrong'
 				});
 			}
-		})
-		.catch(error => {
-			res.status(401).json({
-					message: 'Unauthorized'
-			});
-		});
+		}
 	},
 
-	adminLogin: function(req, res) {
+	adminLogin: async (req, res) => {
 
 		let clientSecret = req.headers['x-client-secret'];
-		User.findOne({email: req.body.email})
-		.exec()
-		.then(function(user) {
-			if(user.isAdmin === true) {
-				bcrypt.compare(req.body.password, user.password, function(err, result) {
-					if(err) {
-						return res.status(401).json({
-							message: 'Username/Password is incorrect.'
-						});
-					}
+		let user, hash;
 
-					if(result){
-						const JWTToken = jwt.sign({
-							email: user.email,
-							_id: user._id
-						},
-						clientSecret,
-						{
-							expiresIn: 43200 
-						});
-							//86400
-						return res.status(200).json({
-							token: JWTToken,
-							user: {
-								email: user.email,
-								firstName: user.firstName,
-								lastName: user.lastName
-							},
-							expiresIn: new Date(Date.now()+(43200*1000))
-						});
-					}
+		try {
+			
+			user = await User.findOne({email: req.body.email});
+			hash = await bcrypt.compare(req.body.password, user.password);
 
-					return res.status(401).json({
-						message: 'Username/Password is incorrect.'
-					});
+		} finally {
+			// Validate if User exists and password is correct.
+			if (!user || !hash) {
+				res.status(401).json({
+					message: 'Username/Password is incorrect.'
+				});
+			} else if(user.isAdmin === false) {	
+				res.status(401).json({
+					message: 'Unauthorized.'
+				});
+			} else if (user && hash) {
+				const JWTToken =  await jwt.sign({
+					email: user.email,
+					_id: user._id
+				},
+				clientSecret,
+				{
+					expiresIn: 43200 
+				});
+					// 86400 = 24hrs
+				res.status(200).json({
+					token: JWTToken,
+					user: user.email,
+					expiresIn: new Date(Date.now()+(43200*1000))
 				});
 			} else {
-				res.status(401).json({
-					message: 'Unauthorized'
+				res.status(500).json({
+					message: 'Someting went wrong'
 				});
-			}		
-		})
-		.catch(error => {
-			res.status(401).json({
-				message: 'Unauthorized'	
-			});
-		});
+			}
+		}
 	},
 
 	logout: function(req, res) {
@@ -117,12 +101,23 @@ const AuthController = {
 	},
 
 	// Register Via APP
-	register: function(req, res) {
-		bcrypt.hash(req.body.password, 10, function(err, hash){
-			if (err) {
-				return res.status(500).json({
+	register: async (req, res) => {
+		
+		let hash, user;
+
+		try {
+			user = await User.findOne({email: req.body.email});
+			hash = await bcrypt.hash(req.body.password, 10);
+		} finally {
+
+			if(user) {
+				res.status(400).json({
+					message: 'Email already taken.'
+				});
+			} else if(!hash) {
+				res.status(500).json({
 					message: 'Internal Server Error'
-				})
+				});
 			} else {
 				const _user = new User({
 					_id: new  mongoose.Types.ObjectId(),
@@ -133,28 +128,32 @@ const AuthController = {
 					subjects: req.body.subjectCode || '',
 					isAdmin: false					
 				});
-				
-				_user.save().then(function (result) {
-					res.status(200).json({
-						message: 'New user has been created.'
-					});
-				}, function (err) {
-					console.log(err);
-					res.status(500).json({
-						message: err
-					});
+
+				await _user.save();
+				res.status(200).json({
+					message: 'New user has been created.'
 				});
 			}
-		});
+		}
 	},
 
 	// Create Admin Account
-	adminRegister: function(req, res) {
-		bcrypt.hash(req.body.password, 10, function(err, hash){
-			if (err) {
-				return res.status(500).json({
+	adminRegister: async (req, res) => {
+
+		let hash, user;
+
+		try {
+			user = await User.findOne({email: req.body.email});
+			hash = await bcrypt.hash(req.body.password, 10);
+		} finally {
+			if(user) {
+				res.status(400).json({
+					message: 'Email already taken.'
+				});
+			} else if(!hash) {
+				res.status(500).json({
 					message: 'Internal Server Error'
-				})
+				});
 			} else {
 				const _user = new User({
 					_id: new  mongoose.Types.ObjectId(),
@@ -165,70 +164,53 @@ const AuthController = {
 					subjectCode: "N/A",
 					isAdmin: true					
 				});
-				
-				_user.save().then(function (result) {
-					res.status(200).json({
-						message: 'New admin user has been created.'
-					});
-				}, function (err) {
-					console.log(err);
-					res.status(401).json({
-						message: 'Email address already taken.'
-					});
+
+				await _user.save();
+				res.status(200).json({
+					message: 'New admin user has been created.'
 				});
 			}
-		});
+		}
 	},
 
 	// Change Password 
-	changePassword: function (req, res) {
+	changePassword: async (req, res) => {
+		
 		let token = req.headers['token'];
 		let _password = req.body.password;
 		let _newPassword = req.body.newPassword;
+		let decoded, user, hash, isMatch;
 
-		jwt.verify(token, config.secret, function(err, decoded) {
-			if (err) {
-				return res.status(401).send({ 
+		try {
+			decoded = await jwt.verify(token, config.secret);
+			user = await User.findOne({ _id: decoded._id });
+			isMatch = await bcrypt.compare( _password, user.password);
+			hash = await bcrypt.hash( _newPassword, 10);
+		} finally {
+			if (!decoded || ! user) {
+				res.status(401).send({ 
 					message: 'Unauthorized' 
 				});
+			} else if (!isMatch) {
+				res.status(400).send({ 
+					message: 'Password did not match.' 
+				});
+			} else if (!hash) {
+				res.status(500).json({
+					message : "Something went wrong."
+				});
 			} else {
-				User.findOne({ _id: decoded._id }).exec(function(err, result){
-					bcrypt.compare( _password, result.password, function (err, result){
-						// console.log(result);
-						if (!result) {
-							res.status(400).json({
-								message: "Password is incorrect."
-							});
-						} else {
-							bcrypt.hash( _newPassword, 10, function(err, hash){
-								if (err){
-									return res.status(500).json({
-										message: 'Someting went wrong.'
-									})
-								} else {
-									User.findOneAndUpdate(
-										{ _id: decoded._id },
-										{ "$set": { password: hash }},
-										{ "new": true },
-										function(err, result) {
-											if (err) {
-												res.status(500).json({
-													message : "Something went wrong."
-												});
-											} else {
-												res.status(200).json({
-													message: "Password successfuly changed."
-												});
-											}
-									});
-								}
-							}); 
-						}
-					});	
-				});		
+				await User.findOneAndUpdate(
+					{ _id: decoded._id },
+					{ "$set": { password: hash }},
+					{ "new": true });
+				res.status(200).json({
+					message: "Password successfuly changed."
+				});
 			}
-		});
+		}
 	},
+
 	// Reset Password and send to new password to email.
 	resetPassword: function (req, res) {
 	
