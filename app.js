@@ -12,6 +12,8 @@ const subjects = require('./routes/subject');
 const dailyTips = require('./routes/dailyTips');
 const subjectCode = require('./routes/subjectCode');
 const homepage = require('./routes/homepage');
+const news = require('./routes/news');
+
 const mongoose = require('mongoose');
 
 const cors = require('cors');
@@ -58,6 +60,7 @@ app.use('/subjects', subjects);
 app.use('/tips', dailyTips);
 app.use('/admin/subjects/codes', subjectCode);
 app.use('/home', homepage);
+app.use('/news', news);
 
 /* Service Status*/
 

@@ -79,7 +79,7 @@ const TopicController = {
 						topicNumber: topic.topicNumber,
 						description: topic.description
 					});
-				})
+				});
 				res.status(200).json(newBody);
 			}
 		}

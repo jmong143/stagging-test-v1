@@ -21,7 +21,7 @@ const UserController = {
 					{"lastName":{'$regex': '^'+ keyword, '$options' : 'i'}},
 					{"email": {'$regex': '^'+keyword, '$options' : 'i'}}
 				]} 
-			});s
+			});
 		}
 		User.aggregate(query).exec(function(err, users) {
 			let newBody = {
