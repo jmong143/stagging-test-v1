@@ -16,7 +16,7 @@ const TopicController = {
 		try {
 
 			subject = await Subject.findOne( { _id: req.params.subjectId } ); 
-			topicCount = await Topic.count( { subjectId: req.params.subjectId } ) || 1;
+			topicCount = await Topic.count( { subjectId: req.params.subjectId } );
 		} finally {
 			if (!subject) {
 				res.status(400).json({

@@ -31,7 +31,7 @@ const uri = 'mongodb://pinnacle:Qwe12345@'+
 mongoose.connect(uri, { useNewUrlParser: true }, function(err) {
 	if (err) throw err;
 	console.log('Connected to DB');
-	dbConnection = true;
+	dbConnection = true;	
 });
 
 /* MongoDb Local */
