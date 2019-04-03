@@ -1,10 +1,16 @@
-//Model
+// Models
 const Lesson = require('../../models/Lesson');
 const Topic = require('../../models/Topic');
 const User = require('../../models/Users');
+const Subject = require('../../models/Subject');
+const ActivityController = require('./ActivityController');
+
+// Dependencies 
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../../config').auth; 
+
+const tag = 'Lessons';
 
 const LessonController = {
 
@@ -77,7 +83,8 @@ const LessonController = {
 	},
 
 	getLesson: async (req, res) => {
-		let lesson;
+		let lesson, decoded, _recentActivity, topic, subject;
+		let token = req.headers['token'];
 		try {
 			lesson = await Lesson.findOne({
 				$and: [
@@ -85,19 +92,38 @@ const LessonController = {
 					{ topicId: req.params.topicId }
 				]
 			});
+
+			decoded = await jwt.verify(token, config.secret);
+			topic = await Topic.findOne( { _id: req.params.topicId } );
+			subject = await Subject.findOne( { _id: topic.subjectId } );
+
 		} finally {
 			if (!lesson) {
 				res.status(400).json({
 					message: 'Lesson does not exist.'
 				});
+			} else if (!decoded) {
+				res.status(401).json({
+					message: 'Unauthorized.'
+				});
 			} else {
 				res.status(200).json({
-					id: lesson.id,
+					id: lesson._id,
 					lessonNumber: lesson.lessonNumber,
 					description: lesson.description,
 					subjectId: lesson.subjectId,
 					isArchive: lesson.isArchive
 				});
+
+				let details = {
+					module: tag,
+					subject: subject.name,
+					topicId: topic._id,
+					topicNumber: topic.topicNumber,
+					lessonId: lesson._id,
+					lessonNumber: lesson.lessonNumber,
+				};
+				ActivityController.addActivity(details, decoded._id);
 			}
 		}
 	

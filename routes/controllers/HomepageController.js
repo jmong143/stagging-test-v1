@@ -7,14 +7,15 @@ const config = require('../../config').auth;
 const Profile = require('../../models/Profile');
 const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');
-
+const News = require('../../models/News')
+const Activity = require('../../models/Activity');
 
 const HomepageController = {
 
 	getHomepage: async (req, res) => {
 
 		let token = req.headers['token'];
-		let decoded, user, profile, subjectCode, recent, announcements, updates;
+		let decoded, user, profile, subjectCode, recent, news;
 		// Homepage Get
 		try {
 			decoded = await jwt.verify(token, config.secret);
@@ -22,36 +23,58 @@ const HomepageController = {
 			profile = await Profile.findOne({ userId: decoded._id}) || {};
 			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
 			// To Follow:
-			recent = {};
-			announcements = {};
-			updates = {};
+			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}) || [];
+			news = await News.find().sort( { updatedAt: -1 } ) || [];
 
-		}catch(err){
-			res.status(500).json({
-				message: 'Something went wrong.'
-			});
 		} finally {
-			res.status(200).json({
-				user: {
-					id: user._id,
-					email: user.email,
-					firstName: user.firstName,
-					lastName: user.lastName,
-					age: profile.age || '',
-					gender: profile.gender || '',
-					school: profile.school || '',
-					updatedAt: profile.updatedAt || '',
-				},
-				subjects: {
-					subjectCode: subjectCode.subjectCode || '',
-					list: subjectCode.subjects || '',
-					activatedAt: subjectCode.activatedAt || '',
-					expiresAt: subjectCode.expiresAt || ''
-				},
-				recentActivities: recent,
-				announcements: announcements,
-				updates: updates
-			});
+			if (!decoded) {
+				res.status(401).json({
+					message: "Unauthorized"
+				});
+			} else {
+				let _recent = [];
+				let _news = [];
+
+				recent.forEach((rcnt)=>{
+					_recent.push({
+						id: rcnt._id,
+						details: rcnt.details,
+						date: rcnt.date
+					});
+				});
+
+				news.forEach((n)=>{
+					_news.push({
+						id: n._id,
+						title: n.title,
+						createdBy: n.createdBy,
+						createdAt: n.createdAt
+					});
+
+				});
+
+				await res.status(200).json({
+					user: {
+						id: user._id,
+						email: user.email,
+						firstName: user.firstName,
+						lastName: user.lastName,
+						age: profile.age || '',
+						gender: profile.gender || '',
+						school: profile.school || '',
+						updatedAt: profile.updatedAt || '',
+					},
+					subjects: {
+						subjectCode: subjectCode.subjectCode || '',
+						list: subjectCode.subjects || '',
+						activatedAt: subjectCode.activatedAt || '',
+						expiresAt: subjectCode.expiresAt || ''
+					},
+					recentActivities: _recent,
+					news: _news
+				});	
+			}
+			
 		};
 	}	
 }

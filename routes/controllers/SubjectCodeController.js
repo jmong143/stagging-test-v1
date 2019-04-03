@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const config = require('../../config').auth; 
 const User = require('../../models/Users');
+const ActivityController = require('./ActivityController');
+
+const tag = 'Subscription';
 
 const SubjectController = {
 
@@ -54,6 +57,7 @@ const SubjectController = {
 			list: [],
 			total: 0
 		};
+
 		try {
 			subjectCodes = await SubjectCode.find();
 		} finally {
@@ -74,18 +78,27 @@ const SubjectController = {
 		}
 	},
 
-	getSubjectCode: (req, res) => {
-		SubjectCode.findOne({_id: req.params.subjectCodeId }).exec(function (err, subjectCode) {
-			res.status(200).json({
-				id: subjectCode._id,
-				subjectCode: subjectCode.subjectCode,
-				userId: subjectCode.userId || '',
-				createdAt: subjectCode.createdAt,
-				activatedAt: subjectCode.activatedAt || '',
-				expiresAt: subjectCode.expiresAt || '',
-				subjects: subjectCode.subjects
-			});
-		});
+	getSubjectCode: async (req, res) => {
+		let subjectCode;
+		try {
+			subjectCode = await SubjectCode.findOne({ _id: req.params.subjectCodeId });
+		} finally {
+			if(!subjectCode) {
+				res.status(400).json({
+					message: 'Subject code does not exist.'
+				});
+			} else {
+				res.status(200).json({
+					id: subjectCode._id,
+					subjectCode: subjectCode.subjectCode,
+					userId: subjectCode.userId || '',
+					createdAt: subjectCode.createdAt,
+					activatedAt: subjectCode.activatedAt || '',
+					expiresAt: subjectCode.expiresAt || '',
+					subjects: subjectCode.subjects
+				});
+			}
+		}
 	},
 
 	activateSubjectCode: async (req, res) => {
@@ -146,6 +159,16 @@ const SubjectController = {
 							expiresAt: subjectCodeResult.expiresAt
 						}
 					});
+
+					let details = {
+						module: tag,
+						subjectCode: subjectCodeResult.subjectCodes,
+						subjects: subjectCodeResult.subjects,
+						activatedAt: subjectCodeResult.activatedAt,
+						expiresAt: subjectCodeResult.expiresAt
+					};
+
+					ActivityController.addActivity(details, decoded._id);
 				} else {
 					res.status(500).json({ 
 						message: 'Something went wrong.' 
