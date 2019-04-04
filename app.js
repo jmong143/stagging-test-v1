@@ -14,6 +14,8 @@ const subjectCode = require('./routes/subjectCode');
 const homepage = require('./routes/homepage');
 const news = require('./routes/news');
 const activity = require('./routes/activity');
+const subscription = require('./routes/subscription');
+
 const mongoose = require('mongoose');
 
 const cors = require('cors');
@@ -62,6 +64,7 @@ app.use('/admin/subjects/codes', subjectCode);
 app.use('/home', homepage);
 app.use('/news', news);
 app.use('/activities', activity);
+app.use('/subscriptions', subscription);
 
 /* Service Status*/
 

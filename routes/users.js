@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const UserController = require('./controllers/UserController');
 const SessionController = require('./controllers/SessionController');
+const SubjectCodeController = require('./controllers/SubjectCodeController');
 
 /* Admin User management */
 router.get('/', SessionController.validateApp, SessionController.validateAdminToken, UserController.getUsers);

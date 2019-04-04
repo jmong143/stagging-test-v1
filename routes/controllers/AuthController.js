@@ -1,6 +1,6 @@
 /* Model Required */
 const User = require('../../models/Users');
-
+const ResetPasswordToken = require('../../models/ResetPasswordToken');
 /* Dependencies Required */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
@@ -211,9 +211,101 @@ const AuthController = {
 		}
 	},
 
-	// Reset Password and send to new password to email.
-	resetPassword: function (req, res) {
-	
+	// Reset Password and send link with token to email.
+	resetPassword: async (req, res) => {
+		let clientId = req.headers['x-client-id'];
+		let user, token, sendEmail, saveToken;
+		const transporter = nodemailer.createTransport({
+		    service: 'Gmail',
+		    auth: {
+		        user: 'pinnaclereviewschool@gmail.com',
+		        pass: 'P1nn@cl3'
+		    }
+		});
+		try {
+			user = await User.findOne({email: req.body.email});
+		} finally {
+			if (!user) {
+				res.status(400).json({
+					message: "Invalid Email."
+				});
+			} else {
+				token =  await jwt.sign({
+					email: user.email,
+					_id: user._id
+				},
+				clientId,
+				{
+					expiresIn: 86400 
+				});
+
+				// Save Token in DB
+				const _token = new ResetPasswordToken({
+					_id: new mongoose.Types.ObjectId(),
+					token: token
+				});
+
+				saveToken = await _token.save();
+
+				let mailOptions = {
+					from: '"Pinnacle Review School" <bulawanjp@gmail.com>',  
+					to: user.email,
+					subject: 'Reset Password - Pinnacle App',
+					html: '<p>Please click on the link below to update your password. <br><br>Link: <a>https://pinnaclereviewschool.com/reset-password?expire=' + token + '</a/>'
+				};
+				sendEmail = await transporter.sendMail(mailOptions);
+				
+				if (!sendEmail) {
+					res.status(200).json({
+						message: 'Something went wrong.'
+					});
+				} else {
+					res.status(200).json({
+						message: 'An email has been sent.'
+					});
+				}
+			}
+		} 
+	},
+
+	updatePassword: async (req,res) => {
+		let clientId = req.headers['x-client-id'];
+		let token = req.headers['token'];
+		let user, decoded, changePassword, hash, deleteToken, resetPasswordToken;
+
+		try {
+			decoded = await jwt.verify(token, config.clients);
+			user = await User.findOne({ _id: decoded._id });
+			hash = await bcrypt.hash(req.body.newPassword, 10);
+		} finally {
+
+			if (!user) {
+				res.status(401).json({
+					message: "Unauthorized"
+				});
+			} else if (!hash) {
+				res.status(500).json({
+					message: "Something went wrong."
+				});
+			} else {
+				changePassword = await User.findOneAndUpdate(
+					{ _id: decoded._id },
+					{ "$set": {
+						password: hash
+					}}, { "new": true });
+				// Delete Reset password token
+				deleteToken = await ResetPasswordToken.deleteOne({ token: token });
+				if (changePassword && ( deleteToken.deletedCount > 0))  {
+					res.status(200).json({
+						message: 'Password successfully updated.'
+					});
+				} else {
+					res.status(500).json({
+						message: 'Something went wrong.'
+					});
+				}
+			}
+		}
 	}
 }
 

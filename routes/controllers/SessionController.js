@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const config = require('../../config').auth; 
 const jwt = require('jsonwebtoken');
 const User = require('../../models/Users');
+const ResetPasswordToken = require('../../models/ResetPasswordToken');
 const mongoose = require('mongoose');
 
 require('dotenv').config();
@@ -89,6 +90,27 @@ const SessionController = {
 			});
 		}
 	},
+
+	validateResetPasswordToken: async (req,res, next) => {
+		let token = req.headers['token'];
+		let resetPasswordToken;
+		if (!token){
+			return res.status(401).send({ message: 'Token is Required.' })
+		};
+		let decoded, user;
+		try {
+			resetPasswordToken = await ResetPasswordToken.findOne( { token: token } );
+		} finally {
+			if (!resetPasswordToken){
+				res.status(401).json({
+					message: 'Token Expired.'
+				});
+			} else {
+				console.log(resetPasswordToken._id);
+				next();
+			}
+		}
+	}
 }
 
 module.exports = SessionController;

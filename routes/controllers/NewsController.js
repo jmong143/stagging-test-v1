@@ -77,7 +77,8 @@ const DailyTipsController = {
 						id: n._id,
 						title: n.title,
 						createdBy: n.createdBy,
-						createdAt: n.createdAt
+						createdAt: n.createdAt,
+						isArchive: n.isArchive
 					});
 				});
 				res.status(200).json(newBody);
@@ -109,8 +110,9 @@ const DailyTipsController = {
 					description: news.description,
 					createdBy: news.createdBy,
 					createdAt: news.createdAt,
-					updatedAt: news.updatedAt
-				})
+					updatedAt: news.updatedAt,
+					isArchive: news.isArchive
+				});
 			}
 		}
 	},

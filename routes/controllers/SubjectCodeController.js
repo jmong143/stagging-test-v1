@@ -101,6 +101,37 @@ const SubjectController = {
 		}
 	},
 
+	getSubscription: async (req, res) => {
+		let token = req.headers['token'];
+		let decoded, user, subjectCode, newBody;
+		try {
+			decoded = await jwt.verify(token, config.secret);
+			user = await User.findOne({ _id: decoded._id});
+			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode}); 
+		} finally {
+			if (!decoded || !user) {
+				res.status(401).json({ 
+					message: 'Unauthorized.' 
+				});		
+			} else if (!subjectCode) {
+				res.status(400).json({ 
+					message: 'You are currently unsubscribed. Please activate a subject code.' 
+				});	
+			} else {
+				newBody = {
+					id: subjectCode._id,
+					subjectCode: subjectCode.subjectCode,
+					userId: subjectCode.userId,
+					subjects: subjectCode.subjects,
+					createdAt: subjectCode.createdAt,
+					activatedAt: subjectCode.activatedAt,
+					expiresAt: subjectCode.expiresAt					
+				};
+				res.status(200).json(newBody);
+			}	
+		}
+	},
+
 	activateSubjectCode: async (req, res) => {
 		let token = req.headers['token'];
 		let decoded, user, subjectCode, userResult, subjectCodeResult;
