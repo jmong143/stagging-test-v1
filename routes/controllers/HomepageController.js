@@ -36,9 +36,18 @@ const HomepageController = {
 				let _news = [];
 
 				recent.forEach((rcnt)=>{
+					
+					let name;
+					if (rcnt.details.module == 'Lessons') {
+						name = rcnt.details.subject;
+					} else if (rcnt.details.module == 'Subscription') {
+						name = 'Activated Subject Code';
+					} else {
+						name = '';
+					}
 					_recent.push({
 						id: rcnt._id,
-						details: rcnt.details,
+						name: name,
 						date: rcnt.date
 					});
 				});
