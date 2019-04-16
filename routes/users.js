@@ -8,5 +8,8 @@ const SubjectCodeController = require('./controllers/SubjectCodeController');
 router.get('/', SessionController.validateApp, SessionController.validateAdminToken, UserController.getUsers);
 router.post('/', SessionController.validateApp, SessionController.validateAdminToken, UserController.createUser);
 router.get('/:userId', SessionController.validateApp, SessionController.validateAdminToken, UserController.getUser);
+router.delete('/:userId', SessionController.validateApp, SessionController.validateAdminToken, UserController.deleteUser);
+router.post('/:userId/reactivate', SessionController.validateApp, SessionController.validateAdminToken, UserController.reactivateUser);
+
 
 module.exports = router;

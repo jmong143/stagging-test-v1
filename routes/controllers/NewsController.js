@@ -76,6 +76,7 @@ const DailyTipsController = {
 					newBody.push({
 						id: n._id,
 						title: n.title,
+						dsecription: n.description,
 						createdBy: n.createdBy,
 						createdAt: n.createdAt,
 						isArchive: n.isArchive

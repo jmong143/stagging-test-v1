@@ -35,7 +35,8 @@ const UserController = {
 					lastName: user.lastName,
 					email: user.email,
 					subjectCode: user.subjectCode,
-					createdAt: user.createdAt
+					createdAt: user.createdAt,
+					isArchive: user.isArchive
 				});
 			});
 			res.status(200).json(newBody);
@@ -60,68 +61,121 @@ const UserController = {
 					subjectCode: user.subjectCode || '',
 					updatedAt: profile.updatedAt || '',
 					createdAt: user.createdAt || '',
-					isActive: user.isActive || ''
+					isActive: user.isActive || '',
+					isArchive: user.isArchive
 				});
 			});		
 		});	
 	},
 
-	createUser: function (req, res) {
+	createUser: async (req, res) => {
 		let _password = Math.random().toString(36).substr(2, 10).toUpperCase();
-		bcrypt.hash(_password, 10, function(err, hash){
-			if (err) {
-				return res.status(400).json({
-					error: err
-				})
-			} else {
-				const _user = new User({
+		let hash, user, saveUser, sendMail;
+		let transporter = nodemailer.createTransport({
+		    service: 'Gmail',
+		    auth: {
+		        user: 'pinnaclereviewschool@gmail.com',
+		        pass: 'P1nn@cl3'
+		    }
+		});
+		try {
+			hash = await bcrypt.hash(_password,10);
+			user = await User.findOne( { email: req.body.email } );
+		} finally {
+			if (!hash) {
+				res.status(500).json({
+					message: 'Something went wrong.'
+				});
+			} else if (user) {
+				res.status(400).json({
+					message: 'Email already taken.'
+				});
+			} else if (!user && hash) {
+				let _user = new User({
 					_id: new mongoose.Types.ObjectId(),
 					email: req.body.email,
 					password: hash,
 					firstName: req.body.firstName,
 					lastName: req.body.lastName,
 					subjectCode: req.body.subjectCode,
+					isArchive: false,
+					isActive: true,
 					isAdmin: false					
 				});
-				
-				_user.save().then(function (result) {
-					// Mail the password to the email
-					transporter = nodemailer.createTransport({
-					    service: 'Gmail',
-					    auth: {
-					        user: 'pinnaclereviewschool@gmail.com',
-					        pass: 'P1nn@cl3'
-					    }
+
+				saveUser = await _user.save();
+				if (!saveUser) {
+					res.status(500).json({
+						message: 'Something went wrong.'
 					});
+				} else {
 					let mailOptions = {
-						from: '"Pinnacle Review School" <bulawanjp@gmail.com>',  
-						to: result.email,
+						from: '"Pinnacle Review School" <pinnaclereviewschool@gmail.com>',  
+						to: saveUser.email,
 						subject: 'Pinnacle App Account Registration',
 						html: '<p>Congratulations! Your Account has been created. <br><br>Temporary Password : ' + _password + '<br><br>Please Change your password using the link below.<br></p>'
 					};
-					transporter.sendMail(mailOptions, function(error, info){
-						if(error){
-							return console.log(error);
-						} else {
-							console.log('Message sent: ' + info.response+ 'password: '+_password);
-							res.status(200).json({
-								message: 'New user has been created.'
-							});
-						} 
+					sendMail = await transporter.sendMail(mailOptions);
+					console.log('Email has been sent to '+ saveUser.email);
+					res.status(200).json({
+						message: 'New user has been created. An Email has been sent to .'+ req.body.email
 					});
-				}, function (err) {
-					console.log(err);
-					res.status(500).json({
-						error: err
-					});
-				});
+				}
 			}
-		});
+		}
 	},
 
-	deactivateUser: function(req, res) {
-		// Delete User
-	}	
+	deleteUser: async (req, res) => {
+		// Deactivate User (Archive)
+		let user, archiveUser;
+		try {
+			user = await User.findOne({_id: req.params.userId});
+		} finally {
+			if (!user) {
+				res.status(200).json({
+					message: 'User does not exist.'
+				});
+			} else {
+				archiveUser = await User.findOneAndUpdate(
+					{ _id: req.params.userId },
+					{ $set: {
+						isActive: false,
+						isArchive: true,
+					}},
+					{ new: true }
+				);				
+				res.status(200).json({
+					message: 'User successfuly archived.'
+				});	
+			}		
+		}
+	},
+
+	reactivateUser: async (req,res) => {
+		// Re activate User account (Unarchive)
+		let user, activateUser;
+		try {
+			user = await User.findOne({_id: req.params.userId});
+		} finally {
+			if (!user) {
+				res.status(200).json({
+					message: 'User does not exist.'
+				});
+			} else {
+				activateUser = await User.findOneAndUpdate(
+					{ _id: req.params.userId },
+					{ $set: {
+						isActive: false,
+						isArchive: false,
+					}},
+					{ new: true }
+				);				
+				res.status(200).json({
+					message: 'User account successfuly reactivated.'
+				});	
+			}		
+		}
+	}
 }
 
 module.exports = UserController;

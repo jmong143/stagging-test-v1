@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const config = require('../../config').auth; 
 const User = require('../../models/Users');
 const ActivityController = require('./ActivityController');
+const Subject = require('../../models/Subject');
 
 const tag = 'Subscription';
 
@@ -14,8 +15,16 @@ const SubjectController = {
 
 		let subjectCode = Math.random().toString(36).substr(2, 8).toUpperCase();
 		let _subjects = [];
+		let subjects;
+		let list = {};
 
 		try {
+			subjects = await Subject.find();
+			if(subjects) {
+				subjects.forEach((subject) => {
+					list[subject._id] = subject.name
+				});
+			}
 
 			if(req.body.subjects.length < 1) {
 				res.status(500).json({
@@ -25,6 +34,7 @@ const SubjectController = {
 				req.body.subjects.forEach((subject)=>{
 					_subjects.push({
 						subjectId: subject,
+						name: list[subject] || '',
 						progress: 0
 					});
 				});	
@@ -211,6 +221,10 @@ const SubjectController = {
 				});
 			} 
 		}	
+	},
+
+	sendSubjectCode: async (req,res) => {
+		// Send Subject Code to user email 
 	}
 }
 

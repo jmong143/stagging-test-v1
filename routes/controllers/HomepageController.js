@@ -66,7 +66,7 @@ const HomepageController = {
 					},
 					subjects: {
 						subjectCode: subjectCode.subjectCode || '',
-						list: subjectCode.subjects || '',
+						list: subjectCode.subjects || [],
 						activatedAt: subjectCode.activatedAt || '',
 						expiresAt: subjectCode.expiresAt || ''
 					},

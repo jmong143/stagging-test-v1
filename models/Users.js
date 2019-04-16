@@ -9,7 +9,8 @@ const user = mongoose.Schema({
    subjectCode: {type: String, default: "" },
    isAdmin: {type: Boolean, required: true },
    createdAt: {type: Date, default: Date.now },
-   isActive: {type: Boolean, default: true}
+   isActive: {type: Boolean, default: true},
+   isArchive: { type: Boolean, default: false}
 });
 
 module.exports = mongoose.model('User', user);

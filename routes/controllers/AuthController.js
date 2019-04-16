@@ -25,9 +25,13 @@ const AuthController = {
 				res.status(401).json({
 					message: 'Username/Password is incorrect.'
 				});
-			}else if(user.isAdmin === true) {	
+			} else if(user.isAdmin === true) {	
 				res.status(401).json({
 					message: 'Unauthorized.'
+				});
+			} else if (user.isArchive === true) {
+				res.status(401).json({
+					message: 'Account deactivated.'
 				});
 			} else if (user && hash) {
 				const JWTToken =  await jwt.sign({
