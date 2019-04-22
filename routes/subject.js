@@ -9,6 +9,7 @@ const LessonController = require('./controllers/LessonController');
 /* Admin Exclusive Endpoints */
 /* Subject Management */
 router.post('/', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.createSubject);
+router.get('/enrollees/count', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.getEnrolleesCount);
 /* Topics Management */
 router.post('/:subjectId/topics', SessionController.validateApp, SessionController.validateAdminToken, TopicController.createTopic);
 router.put('/:subjectId/topics/:topicId', SessionController.validateApp, SessionController.validateAdminToken, TopicController.updateTopic);

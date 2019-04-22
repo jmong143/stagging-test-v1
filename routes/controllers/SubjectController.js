@@ -1,5 +1,6 @@
 //Model
 const Subject = require('../../models/Subject');
+const SubjectCode = require('../../models/SubjectCode');
 const mongoose = require('mongoose');
 
 const SubjectController = {
@@ -20,7 +21,7 @@ const SubjectController = {
 		}, function (err) {
 			console.log(err);
 			res.status(500).json({
-				error: err
+				message: 'Something went wrong.'
 			});
 		});
 	},
@@ -50,6 +51,44 @@ const SubjectController = {
 				createdAt: subject.createdAt
 			});
 		});
+	},
+
+	getEnrolleesCount: async (req, res) => {
+		let subjects, subjectCodes, tmpSubjects, tmpKeys, newBody;
+		try {
+			subjects = await Subject.find();
+			subjectCodes = await SubjectCode.find( { userId: { $ne: "" } } );
+		} finally {
+			if (subjects && subjectCodes) {
+				tmpSubjects = {};
+				subjects.forEach((subject) => {
+					tmpSubjects[subject._id] = 0;
+				});
+				
+				subjectCodes.forEach((sc)=>{
+					sc.subjects.forEach((subject)=>{
+						tmpSubjects[subject.subjectId] += 1;
+					});
+				});
+
+				tmpKeys = Object.keys(tmpSubjects);
+				newBody = [];
+				tmpKeys.forEach((key)=> {
+					let sb = subjects.find(x => x['id'] === key);
+
+					newBody.push({
+						id: key,
+						name: sb.name,
+						totalEnrolled: tmpSubjects[key]
+					});
+				});
+				res.status(200).json(newBody);
+			} else {
+				res.status(500).json({
+					message: 'Something went wrong.'
+				});
+			}
+		}
 	}
 }
 
