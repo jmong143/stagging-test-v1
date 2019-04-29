@@ -22,12 +22,12 @@ const homepage = require('./routes/homepage');
 const news = require('./routes/news');
 const activity = require('./routes/activity');
 const subscription = require('./routes/subscription');
-const uploads = require('./routes/uploads');
+//const uploads = require('./routes/uploads');
 
 const app = express();
 
 /* Setup Local Upload Directories */
-Directory.initialize();
+//Directory.initialize();
 
 let dbConnection = false;
 
