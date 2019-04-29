@@ -1,8 +1,15 @@
+/* Config */
 require('dotenv').config();
 const config = require('./config'); 
+
+/* Packages */
+const mongoose = require('mongoose');
+const cors = require('cors');
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
+
+/* Services */
+const Directory = require('./services/Directory');
 
 /* Routes */
 const user = require('./routes/users');
@@ -15,11 +22,12 @@ const homepage = require('./routes/homepage');
 const news = require('./routes/news');
 const activity = require('./routes/activity');
 const subscription = require('./routes/subscription');
+const uploads = require('./routes/uploads');
 
-const mongoose = require('mongoose');
+const app = express();
 
-const cors = require('cors');
-
+/* Setup Local Upload Directories */
+Directory.initialize();
 
 let dbConnection = false;
 
@@ -32,7 +40,7 @@ const uri = 'mongodb://pinnacle:Qwe12345@'+
 	'ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true'
 mongoose.connect(uri, { useNewUrlParser: true }, function(err) {
 	if (err) throw err;
-	console.log('Connected to DB');
+	console.log('[MongoDB] Connection Successful.');
 	dbConnection = true;	
 });
 
@@ -40,7 +48,7 @@ mongoose.connect(uri, { useNewUrlParser: true }, function(err) {
 
 // mongoose.connect(config.db.host + config.db.database, { useNewUrlParser: true }, function (err) {
 //    if (err) throw err;
-//    console.log('Connected to DB');
+//    console.log('[MongoDB] Connection Successful.');
 //    dbConnection = true;
 // });
 
@@ -50,8 +58,8 @@ let db = mongoose.connection;
 
 app.use(cors());
 
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 /* Use Routes */
 
@@ -65,6 +73,7 @@ app.use('/home', homepage);
 app.use('/news', news);
 app.use('/activities', activity);
 app.use('/subscriptions', subscription);
+app.use('/uploads', uploads);
 
 /* Service Status*/
 
@@ -81,5 +90,5 @@ app.get('/status', function(req, res){
 });
 
 app.listen(config.server.port, function(){
-   console.log(config.server.appname + ' Server is running on Port', config.server.port);
+   console.log('[API] '+config.server.appname + ' Server is running on Port', config.server.port);
 });
