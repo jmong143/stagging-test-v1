@@ -73,7 +73,7 @@ app.use('/home', homepage);
 app.use('/news', news);
 app.use('/activities', activity);
 app.use('/subscriptions', subscription);
-app.use('/uploads', uploads);
+//app.use('/uploads', uploads);
 
 /* Service Status*/
 
