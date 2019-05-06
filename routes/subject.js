@@ -35,5 +35,4 @@ router.get('/topics/:topicId/lessons/:lessonId', SessionController. validateApp,
 router.post('/codes/activate', SessionController.validateApp, SessionController.validateToken, SubjectCodeController.activateSubjectCode);
 
 
-
 module.exports = router;

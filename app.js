@@ -34,14 +34,15 @@ let dbConnection = false;
 /* MongoDB Atlas*/
 
 const uri = 'mongodb://pinnacle:Qwe12345@'+
-	'cluster0-shard-00-00-js4og.mongodb.net:27017,'+
-	'cluster0-shard-00-01-js4og.mongodb.net:27017,'+
-	'cluster0-shard-00-02-js4og.mongodb.net:27017/test?'+
-	'ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true'
+   'cluster0-shard-00-00-js4og.mongodb.net:27017,'+
+   'cluster0-shard-00-01-js4og.mongodb.net:27017,'+
+   'cluster0-shard-00-02-js4og.mongodb.net:27017/test?'+
+   'ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true';
+   
 mongoose.connect(uri, { useNewUrlParser: true }, function(err) {
-	if (err) throw err;
-	console.log('[MongoDB] Connection Successful.');
-	dbConnection = true;	
+   if (err) throw err;
+   console.log('[MongoDB] Connection Successful.');
+   dbConnection = true; 
 });
 
 /* MongoDb Local */
@@ -78,14 +79,14 @@ app.use('/subscriptions', subscription);
 /* Service Status*/
 
 app.get('/status', function(req, res){
-   	if (dbConnection) {
-		res.status(200).json({
-			"message": "API is Running and DB Connection is Up."
-		});	
-   	} else {
-   		res.status(500).json({
-   			"message": "Database Connection Error"
-   		});	
+   if (dbConnection) {
+      res.status(200).json({
+         "message": "API is Running and DB Connection is Up."
+      });   
+   } else {
+      res.status(500).json({
+         "message": "Database Connection Error"
+      });   
     }   
 });
 

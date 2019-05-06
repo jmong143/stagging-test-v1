@@ -23,7 +23,7 @@ const HomepageController = {
 			profile = await Profile.findOne({ userId: decoded._id}) || {};
 			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
 			// To Follow:
-			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}) || [];
+			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}).limit(9) || [];
 			news = await News.find().sort( { updatedAt: -1 } ) || [];
 
 		} finally {

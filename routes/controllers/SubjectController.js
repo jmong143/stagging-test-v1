@@ -35,7 +35,8 @@ const SubjectController = {
 			subjects.forEach((subject)=>{
 				newBody.subjects.push({
 					id: subject._id,
-					name: subject.name
+					name: subject.name,
+					createdAt: subject.createdAt 
 				});
 			});
 			res.status(200).json(newBody);

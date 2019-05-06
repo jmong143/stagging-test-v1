@@ -7,5 +7,6 @@ const SubjectCodeController = require('./controllers/SubjectCodeController');
 router.post('/generate', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.generateSubjectCode);
 router.get('/', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.getSubjectCodes);
 router.get('/:subjectCodeId', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.getSubjectCode);
+router.post('/send', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.sendSubjectCode);
 
 module.exports = router;

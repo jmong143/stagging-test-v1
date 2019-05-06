@@ -1,11 +1,15 @@
-const SubjectCode = require('../../models/SubjectCode');
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
 const config = require('../../config').auth; 
+
+/* Models */
 const User = require('../../models/Users');
 const ActivityController = require('./ActivityController');
 const Subject = require('../../models/Subject');
+const SubjectCode = require('../../models/SubjectCode');
 
 const tag = 'Subscription';
 
@@ -225,6 +229,47 @@ const SubjectController = {
 
 	sendSubjectCode: async (req,res) => {
 		// Send Subject Code to user email 
+		let subjectCode, user; 
+		let transporter = nodemailer.createTransport({
+		    service: 'Gmail',
+		    auth: {
+		        user: 'pinnaclereviewschool@gmail.com',
+		        pass: 'P1nn@cl3'
+		    }
+		});
+
+		try {
+			subjectCode = await SubjectCode.findOne({ subjectCode: req.body.subjectCode});
+			user = await User.findOne({ email: req.body.email});
+		} finally {
+			if(!user) {
+				res.status(400).json({ 
+					message: 'Email address is not yet enrolled.' 
+				});
+			} else if (!subjectCode) {
+				res.status(400).json({ 
+					message: 'Subject code does not exist.' 
+				});
+			} else {
+				let mailOptions = {
+						from: '"Pinnacle Review School" <pinnaclereviewschool@gmail.com>',  
+						to: user.email,
+						subject: 'Pinnacle App Account Registration',
+						html: '<p>Congratulations! You have successfuly purchased a subject code! <br><br>Subject Code : ' + subjectCode.subjectCode + '<br><br>Activate your subcription by using the mobile app or web app.<br></p>'
+					};
+				sendMail = await transporter.sendMail(mailOptions);
+				if (!sendMail) {
+					res.status(500).json({
+						message: 'Email sending failed. Please try again.'+ req.body.email
+					});
+				} else {
+					res.status(200).json({
+						message: 'Subject code has been sent sent to '+ req.body.email
+					});
+					console.log('Email has been sent to '+ user.email);				
+				}
+			}
+		}
 	}
 }
 
