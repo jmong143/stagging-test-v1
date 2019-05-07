@@ -74,7 +74,8 @@ const LessonController = {
 					newBody.push({
 						id: lesson._id,
 						lessonNumber: lesson.lessonNumber,
-						description: lesson.description
+						description: lesson.description,
+						isArchive: lesson.isArchive
 					});
 				});
 				res.status(200).json(newBody);
