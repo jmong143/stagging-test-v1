@@ -1,17 +1,21 @@
-//Model
-const Subject = require('../../models/Subject');
-const SubjectCode = require('../../models/SubjectCode');
-const User = require('../../models/Users');
-const config = require('../../config').auth; 
-
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
+/* Models Required */
+const Subject = require('../../models/Subject');
+const SubjectCode = require('../../models/SubjectCode');
+const User = require('../../models/Users');
+const config = require('../../config').auth; 
+const SubjectUpdates = require('../../models/SubjectUpdates');
+
 const SubjectController = {
 
-	createSubject: (req, res) => {
+	createSubject: async (req, res) => {
 		// Create new Subject
+		let saveSubject, saveUpdate;
+
 		const _subject = new Subject ({
 			_id: new mongoose.Types.ObjectId(),
 			name: req.body.name,
@@ -19,16 +23,30 @@ const SubjectController = {
 			description: req.body.description
 		});
 
-		_subject.save().then(function (result) {
-			res.status(200).json({
-				message: 'New Subject has been added.'
-			});
-		}, function (err) {
-			console.log(err);
-			res.status(500).json({
-				message: 'Something went wrong.'
-			});
-		});
+		try {
+			saveSubject = await _subject.save();
+		} finally {
+			if (!saveSubject) {
+				//console.log(err);
+				res.status(500).json({
+					message: 'Something went wrong.'
+				});
+			} else {
+				let _updates = new SubjectUpdates ({
+					_id: new mongoose.Types.ObjectId(),
+					subjectId: saveSubject.id,
+					topicId: '',
+					lessonId: '',
+					description: 'New Subject Added.',
+					updatedAt: Date.now()
+				});
+				
+				await _updates.save();
+				res.status(200).json({
+					message: 'New Subject has been added.'
+				});
+			}
+		}
 	},
 
 	getSubjects: async (req, res) => {

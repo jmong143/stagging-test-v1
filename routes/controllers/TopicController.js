@@ -1,17 +1,20 @@
-//Model
-const Topic = require('../../models/Topic');
-const Subject = require('../../models/Subject');
-const User = require('../../models/Users');
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../../config').auth; 
+
+/* Models Required */
+const Topic = require('../../models/Topic');
+const Subject = require('../../models/Subject');
+const User = require('../../models/Users');
+const SubjectUpdates = require('../../models/SubjectUpdates');
 
 const TopicController = {
 
 	/* Create new Topic */
 	createTopic: async (req, res) => {
 
-		let subject, topicCount, _topic;
+		let subject, topicCount, _topic, saveTopic;
 
 		try {
 
@@ -32,10 +35,26 @@ const TopicController = {
 					isArchive: false
 				});
 
-				await _topic.save();
-				res.status(200).json({
-					message: 'New Topic has been added.'
-				});
+				saveTopic = await _topic.save();
+				if(saveTopic) {
+					let _updates = new SubjectUpdates ({
+						_id: new mongoose.Types.ObjectId(),
+						subjectId: saveTopic.subjectId,
+						topicId: saveTopic.id,
+						lessonId: '',
+						description: 'New Topic Added.',
+						updatedAt: Date.now()
+					});
+					
+					await _updates.save();
+					res.status(200).json({
+						message: 'New Topic has been added.'
+					});
+				} else {
+					res.status(500).json({
+						message: 'Something went wrong.'
+					});
+				}
 			}
 		}
 	},
@@ -119,7 +138,7 @@ const TopicController = {
 
 	/* Update Topic */
 	updateTopic: async (req, res) => {
-		let topic;
+		let topic, updateTopic;
 		try {
 			topic = await Topic.findOne({
 				$and: [
@@ -133,7 +152,7 @@ const TopicController = {
 					message: 'Topic does not exist.'
 				});
 			} else {
-				await Topic.findOneAndUpdate(
+				updateTopic = await Topic.findOneAndUpdate(
 					{ _id: req.params.topicId},
 					{ $set: {
 						description: req.body.description,
@@ -142,10 +161,25 @@ const TopicController = {
 					}},
 					{ new: true }
 				);
-
-				res.status(200).json({
-					message: 'Topic details successfuly updated.'
-				});
+				if (updateTopic) {
+					let _updates = new SubjectUpdates ({
+						_id: new mongoose.Types.ObjectId(),
+						subjectId: updateTopic.subjectId,
+						topicId: updateTopic.id,
+						lessonId: '',
+						description: 'Updated Topic.',
+						updatedAt: Date.now()
+					});
+					
+					await _updates.save();
+					res.status(200).json({
+						message: 'Topic details successfuly updated.'
+					});
+				} else {
+					res.status(500).json({
+						message: 'Something went wrong.'
+					});
+				}
 			}
 		}
 	},

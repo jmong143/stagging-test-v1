@@ -4,6 +4,7 @@ const Topic = require('../../models/Topic');
 const User = require('../../models/Users');
 const Subject = require('../../models/Subject');
 const ActivityController = require('./ActivityController');
+const SubjectUpdates = require('../../models/SubjectUpdates');
 
 // Dependencies 
 const mongoose = require('mongoose');
@@ -15,7 +16,7 @@ const tag = 'Lessons';
 const LessonController = {
 
 	createLesson: async (req, res) => {
-		let topic, lesson, lessonCount;
+		let topic, lesson, lessonCount, saveLesson;
 		try {
 			topic = await Topic.findOne( { _id: req.params.topicId } );
 			lessonCount = await Lesson.count( { topicId: req.params.topicId } );
@@ -33,10 +34,27 @@ const LessonController = {
 					isArchive: false
 				});
 
-				await lesson.save();
-				res.status(200).json({
-					message: 'New Lesson has been added.'
-				})
+				saveLesson = await lesson.save();
+				if (saveLesson) {
+					let _updates = new SubjectUpdates ({
+						_id: new mongoose.Types.ObjectId(),
+						subjectId: topic.subjectId,
+						topicId: saveLesson.topicId,
+						lessonId: saveLesson.id,
+						description: 'New Lesson Added.',
+						updatedAt: Date.now()
+					});
+					
+					await _updates.save();
+					res.status(200).json({
+						message: 'New Lesson has been added.'
+					});
+				} else {
+					res.status(500).json({
+						message: 'Something went wrong.'
+					});
+				}
+				
 			}
 		}
 	},
@@ -132,7 +150,7 @@ const LessonController = {
 
 	updateLesson: async (req, res) => {
 		// Update Lesson
-		let lesson;
+		let lesson, updateLesson, topic;
 		try {
 			lesson = await Lesson.findOne({
 				$and: [
@@ -140,14 +158,15 @@ const LessonController = {
 					{ topicId: req.params.topicId }
 				]
 			});
-
+			topic = await Topic.findOne( { _id: req.params.topicId } );
 		} finally {
+
 			if (!lesson) {
 				res.status(400).json({
 					message: 'Lesson does not exist.'
 				});
 			} else {
-				await Lesson.findOneAndUpdate(
+				updateLesson = await Lesson.findOneAndUpdate(
 					{ _id: req.params.lessonId },
 					{ $set: {
 						description: req.body.description,
@@ -157,9 +176,27 @@ const LessonController = {
 					{ new: true }
 				);
 
-				res.status(200).json({
-					message: 'Lesson details successfuly updated.'
-				});
+				if (updateLesson) {
+
+					let _updates = new SubjectUpdates ({
+						_id: new mongoose.Types.ObjectId(),
+						subjectId: topic.subjectId,
+						topicId: updateLesson.topicId,
+						lessonId: updateLesson.id,
+						description: 'Updated Lesson.',
+						updatedAt: Date.now()
+					});
+					
+					await _updates.save();
+
+					res.status(200).json({
+						message: 'Lesson details successfuly updated.'
+					});
+				} else {
+					res.status(500).json({
+						message: 'Something went wrong'
+					});
+				}
 			}
 		}
 	},
