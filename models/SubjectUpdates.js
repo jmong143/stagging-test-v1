@@ -6,6 +6,7 @@ const subjectUpdates = mongoose.Schema({
    topicId: { type: String },
    lessonId: { type: String },
    description: { type: String },
+   name: { type: String},
    updatedAt: { type: Date, default: Date.now }
 });
 

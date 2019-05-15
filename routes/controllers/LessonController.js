@@ -16,10 +16,11 @@ const tag = 'Lessons';
 const LessonController = {
 
 	createLesson: async (req, res) => {
-		let topic, lesson, lessonCount, saveLesson;
+		let topic, subject, lesson, lessonCount, saveLesson;
 		try {
 			topic = await Topic.findOne( { _id: req.params.topicId } );
 			lessonCount = await Lesson.count( { topicId: req.params.topicId } );
+			subject = await Subject.findOne( { _id: topic.subjectId });
 		} finally {
 			if(!topic) {
 				res.status(400).json({
@@ -42,6 +43,7 @@ const LessonController = {
 						topicId: saveLesson.topicId,
 						lessonId: saveLesson.id,
 						description: 'New Lesson Added.',
+						name: subject.name +' Topic No. '+ topic.topicNumber + ', Lesson No. '+ saveLesson.lessonNumber,
 						updatedAt: Date.now()
 					});
 					
@@ -159,6 +161,7 @@ const LessonController = {
 				]
 			});
 			topic = await Topic.findOne( { _id: req.params.topicId } );
+			subject = await Subject.findOne( { _id: topic.subjectId } );
 		} finally {
 
 			if (!lesson) {
@@ -184,6 +187,7 @@ const LessonController = {
 						topicId: updateLesson.topicId,
 						lessonId: updateLesson.id,
 						description: 'Updated Lesson.',
+						name: subject.name +' Topic No. '+ topic.topicNumber + ', Lesson No. '+ updateLesson.lessonNumber,
 						updatedAt: Date.now()
 					});
 					

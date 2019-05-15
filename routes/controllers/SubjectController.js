@@ -38,6 +38,7 @@ const SubjectController = {
 					topicId: '',
 					lessonId: '',
 					description: 'New Subject Added.',
+					name: saveSubject.name,
 					updatedAt: Date.now()
 				});
 				

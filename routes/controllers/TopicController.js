@@ -43,6 +43,7 @@ const TopicController = {
 						topicId: saveTopic.id,
 						lessonId: '',
 						description: 'New Topic Added.',
+						name: subject.name +' Topic No. '+ saveTopic.topicNumber,
 						updatedAt: Date.now()
 					});
 					
@@ -138,7 +139,7 @@ const TopicController = {
 
 	/* Update Topic */
 	updateTopic: async (req, res) => {
-		let topic, updateTopic;
+		let topic, updateTopic, subject;
 		try {
 			topic = await Topic.findOne({
 				$and: [
@@ -146,6 +147,7 @@ const TopicController = {
 					{ subjectId: req.params.subjectId}
 				]
 			});
+			subject = await Subject.findOne( { _id: topic.subjectId } );
 		} finally {
 			if(!topic) {
 				res.status(400).json({
@@ -168,6 +170,7 @@ const TopicController = {
 						topicId: updateTopic.id,
 						lessonId: '',
 						description: 'Updated Topic.',
+						name: subject.name +' Topic No. '+ updateTopic.topicNumber,
 						updatedAt: Date.now()
 					});
 					
