@@ -41,6 +41,7 @@ const SubjectUpdatesController = {
 						topicId: update.topicId,
 						lessonId: update.lessonId,
 						description: update.description,
+						name: update.name,
 						updatedAt: update.updatedAt
 					});
 				});
