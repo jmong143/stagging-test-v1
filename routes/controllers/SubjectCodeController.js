@@ -264,7 +264,7 @@ const SubjectController = {
 					});
 				} else {
 					res.status(200).json({
-						message: 'Subject code has been sent sent to '+ req.body.email
+						message: 'Subject code has been sent to '+ req.body.email
 					});
 					console.log('Email has been sent to '+ user.email);				
 				}
