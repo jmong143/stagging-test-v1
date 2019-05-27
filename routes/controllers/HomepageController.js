@@ -56,6 +56,7 @@ const HomepageController = {
 					_news.push({
 						id: n._id,
 						title: n.title,
+						description: n.description,
 						createdBy: n.createdBy,
 						createdAt: n.createdAt
 					});

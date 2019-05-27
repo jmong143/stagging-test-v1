@@ -97,7 +97,8 @@ const TopicController = {
 					newBody.push({
 						id: topic._id,
 						topicNumber: topic.topicNumber,
-						description: topic.description
+						description: topic.description,
+						isArchive: topic.isArchive
 					});
 				});
 				res.status(200).json(newBody);
