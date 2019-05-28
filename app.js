@@ -23,6 +23,7 @@ const news = require('./routes/news');
 const activity = require('./routes/activity');
 const subscription = require('./routes/subscription');
 const subjectUpdates = require('./routes/subjectUpdates');
+const schools = require('./routes/school');
 //const uploads = require('./routes/uploads');
 
 const app = express();
@@ -76,6 +77,7 @@ app.use('/news', news);
 app.use('/activities', activity);
 app.use('/subscriptions', subscription);
 app.use('/updates', subjectUpdates);
+app.use('/schools', schools);
 //app.use('/uploads', uploads);
 
 /* Service Status*/
