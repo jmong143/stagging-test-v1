@@ -60,7 +60,7 @@ const AuthController = {
 
 		let clientSecret = req.headers['x-client-secret'];
 		let user, hash;
-
+		
 		try {
 			
 			user = await User.findOne({email: req.body.email});
