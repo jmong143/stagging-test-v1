@@ -8,8 +8,12 @@ const GridFsStorage = require('multer-gridfs-storage');
 const config = require('../config');
 require('dotenv').config();
 
-const uri = config.db.host + config.db.database;
-
+const uri = 'mongodb://pinnacle:Qwe12345@'+
+   'cluster0-shard-00-00-js4og.mongodb.net:27017,'+
+   'cluster0-shard-00-01-js4og.mongodb.net:27017,'+
+   'cluster0-shard-00-02-js4og.mongodb.net:27017/test?'+
+   'ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true';
+   
 /* Storage Engine */
 exports.storage = new GridFsStorage({
   url: uri,
