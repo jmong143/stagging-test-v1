@@ -10,8 +10,6 @@ const Profile = require('../../models/Profile');
 const UserController = {
 
 	getUsers: (req, res) => {
-		// Query Params to follow & pagination
-
 		let keyword = req.query.keyword;
 		let query = [{ $match: {isAdmin: false} }];
 

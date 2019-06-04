@@ -20,7 +20,8 @@ const SubjectController = {
 			_id: new mongoose.Types.ObjectId(),
 			name: req.body.name,
 			code: req.body.code,
-			description: req.body.description
+			description: req.body.description,
+			imageUrl: req.body.imageUrl
 		});
 
 		try {
@@ -74,6 +75,7 @@ const SubjectController = {
 					newBody.subjects.push({
 						id: subject._id,
 						name: subject.name,
+						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt 
 					});
 				});
@@ -87,6 +89,7 @@ const SubjectController = {
 					newBody.subjects.push({
 						id: subject._id,
 						name: subject.name,
+						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
 						isEnrolled: false 
 					});
@@ -112,6 +115,7 @@ const SubjectController = {
 					newBody.subjects.push({
 						id: subject._id,
 						name: subject.name,
+						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
 						isEnrolled: isEnrolled 
 					});
@@ -127,6 +131,7 @@ const SubjectController = {
 				id: subject._id,
 				name: subject.name,
 				description: subject.description,
+				imageUrl: subject.imageUrl,
 				createdAt: subject.createdAt
 			});
 		});

@@ -12,7 +12,8 @@ const Config = {
 		database: process.env.DB_DATABASE,
 		username: process.env.DB_USER,
 		password: process.env.DB_PASS,
-		port: process.env.DB_PORT
+		port: process.env.DB_PORT,
+		atlasURI: process.env.DB_ATLAS_URI
 	}
 }
 

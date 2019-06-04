@@ -27,6 +27,7 @@ const DailyTipsController = {
 					_id: new mongoose.Types.ObjectId(),
 					title: req.body.title,
 					description: req.body.description,
+					imageUrl: req.body.imageUrl,
 					createdBy: user.firstName + ' ' + user.lastName,
 					isArchive: false
 				});
@@ -77,6 +78,7 @@ const DailyTipsController = {
 						id: n._id,
 						title: n.title,
 						dsecription: n.description,
+						imageUrl: n.imageUrl,
 						createdBy: n.createdBy,
 						createdAt: n.createdAt,
 						isArchive: n.isArchive
@@ -109,6 +111,7 @@ const DailyTipsController = {
 					id: news._id,
 					title: news.title,
 					description: news.description,
+					imageUrl: news.imageUrl,
 					createdBy: news.createdBy,
 					createdAt: news.createdAt,
 					updatedAt: news.updatedAt,
@@ -133,6 +136,7 @@ const DailyTipsController = {
 					{ $set: {
 						title: req.body.title,
 						description: req.body.description,
+						imageUrl: req.body.imageUrl,
 						updatedAt: Date.now(),
 						isArchive: req.body.isArchive,
 

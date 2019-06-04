@@ -39,11 +39,7 @@ let dbConnection = false;
 mongoose.set('useCreateIndex', true);
 
 /* MongoDB Atlas*/
-const uri = 'mongodb://pinnacle:Qwe12345@'+
-   'cluster0-shard-00-00-js4og.mongodb.net:27017,'+
-   'cluster0-shard-00-01-js4og.mongodb.net:27017,'+
-   'cluster0-shard-00-02-js4og.mongodb.net:27017/test?'+
-   'ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true';
+const uri = config.db.atlasURI;
 
 /* MongoDb Local */
 // const uri = config.db.host + config.db.database;
