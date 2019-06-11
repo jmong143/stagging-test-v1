@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-/* Models Required */
+/* Models */
 const Subject = require('../../models/Subject');
 const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');

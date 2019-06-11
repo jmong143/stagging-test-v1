@@ -7,10 +7,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const express = require('express');
 const bodyParser = require('body-parser');
-
-/* Services */
-//const Directory = require('./services/Directory');
-//const GFSService = require('./services/GridFS');
+const logger = require('morgan');
 
 /* Routes */
 const user = require('./routes/users');
@@ -26,30 +23,24 @@ const subscription = require('./routes/subscription');
 const subjectUpdates = require('./routes/subjectUpdates');
 const schools = require('./routes/school');
 const uploads = require('./routes/uploads');
+const question = require('./routes/question');
 
 const app = express();
+
+/* Services */
+const db = require('./services/db.js');
 
 /* API Settings */
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(logger('short'));
 
 /* MongoDB */
 let dbConnection = false;
-mongoose.set('useCreateIndex', true);
 
-/* MongoDB Atlas*/
-const uri = config.db.atlasURI;
-
-/* MongoDb Local */
-// const uri = config.db.host + config.db.database;
-
-/* Create MongoDB Connection */   
-mongoose.connect(uri, { useNewUrlParser: true }, function(err) {
-   if (err) throw err;
-   console.log('[MongoDB] Connection Successful.');
-   dbConnection = true; 
-});
+/* Create Database Connection */
+const connection = db.connection;
 
 /* Use Routes */
 app.use('/users', user);
@@ -65,10 +56,11 @@ app.use('/subscriptions', subscription);
 app.use('/updates', subjectUpdates);
 app.use('/schools', schools);
 app.use('/uploads', uploads);
+app.use('/questions', question);
 
-/* Service Status*/
+/* API Status*/
 app.get('/status', function(req, res){
-   if (dbConnection) {
+   if (connection) {
       res.status(200).json({
          "message": "API is Running and DB Connection is Up."
       });   

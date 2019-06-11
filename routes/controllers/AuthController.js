@@ -1,12 +1,13 @@
-/* Model Required */
-const User = require('../../models/Users');
-const ResetPasswordToken = require('../../models/ResetPasswordToken');
-/* Dependencies Required */
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const config = require('../../config').auth; 
+
+/* Model */
+const User = require('../../models/Users');
+const ResetPasswordToken = require('../../models/ResetPasswordToken');
 
 const AuthController = {
 

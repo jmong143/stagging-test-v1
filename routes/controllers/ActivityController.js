@@ -1,10 +1,12 @@
-const Activity = require('../../models/Activity');
-const mongoose = require('mongoose');
-const User = require('../../models/Users');
-
+/* Dependencies */
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const config = require('../../config').auth; 
+
+/* Models */
+const Activity = require('../../models/Activity');
+const mongoose = require('mongoose');
+const User = require('../../models/Users');
 
 const ActivityController = {
 	

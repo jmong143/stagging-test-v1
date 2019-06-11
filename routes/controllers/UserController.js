@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 
-/*Models*/
+/* Models */
 const User = require('../../models/Users');
 const Profile = require('../../models/Profile');
 

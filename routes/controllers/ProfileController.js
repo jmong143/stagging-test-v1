@@ -1,9 +1,12 @@
-const Profile = require('../../models/Profile');
-const SubjectCode = require('../../models/SubjectCode');
-const User = require('../../models/Users');
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../../config').auth;
+
+/* Models */
+const Profile = require('../../models/Profile');
+const SubjectCode = require('../../models/SubjectCode');
+const User = require('../../models/Users');
 
 const ProfileController = {
 

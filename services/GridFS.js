@@ -1,18 +1,19 @@
 /* Packages */
 const path = require('path');
 const crypto = require('crypto');
-const mongoose = require('mongoose');
 const GridFsStorage = require('multer-gridfs-storage');
 
 /* Dependencies */
 const config = require('../config');
 require('dotenv').config();
 
+/* MongoDB Settings */
 const uri = config.db.atlasURI;
    
 /* Storage Engine */
 exports.storage = new GridFsStorage({
     url: uri,
+    options: { useNewUrlParser: true },
     file: (req, file) => {
         return new Promise((resolve, reject) => {
             crypto.randomBytes(16, (err, buf) => {
@@ -25,7 +26,7 @@ exports.storage = new GridFsStorage({
                     content_type: file.mimetype,
                     bucketName: 'uploads'
                 };
-                console.log("[FILE][STORAGE]: " + JSON.stringify(fileInfo))
+                //console.log("[FILE][STORAGE]: " + JSON.stringify(fileInfo))
                 resolve(fileInfo);
             });
         });
@@ -36,7 +37,6 @@ exports.storage = new GridFsStorage({
 exports.fileFilter = (req, file, callback) => {
     let ext = path.extname(file.originalname);
     let type = req.query.type.toUpperCase();
-    // Accept pdf files on lessons module.
     if (type === 'LESSONS') {
         if (ext === '.pdf') {
             callback(null, true);

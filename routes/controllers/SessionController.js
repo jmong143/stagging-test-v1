@@ -1,9 +1,12 @@
+/* Dependencies */
 const bcrypt = require('bcrypt');
 const config = require('../../config').auth; 
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+
+/* Models */
 const User = require('../../models/Users');
 const ResetPasswordToken = require('../../models/ResetPasswordToken');
-const mongoose = require('mongoose');
 
 require('dotenv').config();
 

@@ -1,9 +1,11 @@
-//Model
-const School = require('../../models/School');
-const User = require('../../models/Users');
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../../config').auth; 
+
+/* Model */
+const School = require('../../models/School');
+const User = require('../../models/Users');
 
 const SchoolController = {
 

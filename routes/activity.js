@@ -1,5 +1,8 @@
+/* Dependencies */
 const express = require('express');
 const router = express.Router();
+
+/* Controllers */
 const ActivityController = require('./controllers/ActivityController');
 const SessionController = require('./controllers/SessionController');
 

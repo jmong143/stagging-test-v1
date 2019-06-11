@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../../config').auth;
 
-/* Models Required */
+/* Models */
 const SubjectUpdates = require('../../models/SubjectUpdates');
 const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');

@@ -1,6 +1,8 @@
-//Model
-const DailyTips = require('../../models/DailyTips');
+/* Dependencies */
 const mongoose = require('mongoose');
+
+/* Models*/
+const DailyTips = require('../../models/DailyTips');
 
 const DailyTipsController = {
 

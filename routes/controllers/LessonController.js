@@ -1,15 +1,15 @@
-// Models
+/* Dependencies */  
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const config = require('../../config').auth; 
+
+/* Models */ 
 const Lesson = require('../../models/Lesson');
 const Topic = require('../../models/Topic');
 const User = require('../../models/Users');
 const Subject = require('../../models/Subject');
 const ActivityController = require('./ActivityController');
 const SubjectUpdates = require('../../models/SubjectUpdates');
-
-// Dependencies 
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const config = require('../../config').auth; 
 
 const tag = 'Lessons';
 

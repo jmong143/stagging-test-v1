@@ -1,5 +1,8 @@
+/* Dependencies */
 const express = require('express');
 const router = express.Router();
+
+/* Controllers */
 const SessionController = require('./controllers/SessionController');
 const SubjectController = require('./controllers/SubjectController');
 const SubjectCodeController = require('./controllers/SubjectCodeController');
