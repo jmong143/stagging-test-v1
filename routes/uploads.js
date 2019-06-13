@@ -13,7 +13,7 @@ require('dotenv').config();
 const config = require('../config'); 
 
 /* Services */
-const GridFSService = require('../services/gridFS');
+const GridFSService = require('../services/GridFS');
 
 /* Controllers */
 const SessionController = require('./controllers/SessionController');
