@@ -25,6 +25,7 @@ router.delete('/topics/:topicId/lessons/:lessonId', SessionController.validateAp
 /* Subjects / Topics / Lessons routes for front and admin */
 /* Subjects */ 
 router.get('/:subjectId', SessionController.validateApp, SubjectController.getSubject);
+router.get('/:subjectId/codes', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.getSubjectCodes);
 router.get('/', SessionController.validateApp, SubjectController.getSubjects);
 /* Topics */
 router.get('/:subjectId/topics', SessionController.validateApp, TopicController.getTopics);

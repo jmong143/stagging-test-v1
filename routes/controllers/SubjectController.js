@@ -173,6 +173,39 @@ const SubjectController = {
 				});
 			}
 		}
+	},
+
+	getSubjectCodes: async (req,res)=> {
+		let subjectCodes, subject;
+		
+		try {
+			subject = await Subject.findOne({ _id: req.params.subjectId });
+			subjectCodes = await SubjectCode.find();
+			let response = {
+				id: subject._id,
+				name: subject.name,
+				description: subject.description,
+				imageUrl: subject.imageUrl,
+				createdAt: subject.createdAt,
+				subjectCodes: []
+			};
+
+			subjectCodes.forEach((sc)=> {
+				sc.subjects.forEach((subject)=> {
+					if(subject.subjectId == req.params.subjectId) {
+						response.subjectCodes.push(sc.subjectCode);
+					}
+				});
+			});
+
+			res.status(200).json(response);
+
+		} catch (e) {
+			res.status(400).json({
+				message: 'Failed to get subject codes.',
+				error: e.message
+			})
+		}
 	}
 }
 

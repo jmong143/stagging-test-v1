@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-const config = require('../../config').auth; 
+const config = require('../../config'); 
 
 /* Models */
 const User = require('../../models/Users');
@@ -119,7 +119,7 @@ const SubjectController = {
 		let token = req.headers['token'];
 		let decoded, user, subjectCode, newBody;
 		try {
-			decoded = await jwt.verify(token, config.secret);
+			decoded = await jwt.verify(token, config.auth.secret);
 			user = await User.findOne({ _id: decoded._id});
 			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode}); 
 		} finally {
@@ -151,7 +151,7 @@ const SubjectController = {
 		let decoded, user, subjectCode, userResult, subjectCodeResult;
 
 		try {
-			decoded = await jwt.verify(token, config.secret);
+			decoded = await jwt.verify(token, config.auth.secret);
 			user = await User.findOne({ _id: decoded._id});
 			subjectCode = await SubjectCode.findOne({ subjectCode: req.body.subjectCode});
 			
@@ -231,10 +231,10 @@ const SubjectController = {
 		// Send Subject Code to user email 
 		let subjectCode, user; 
 		let transporter = nodemailer.createTransport({
-		    service: 'Gmail',
+		    service: config.mail.service,
 		    auth: {
-		        user: 'pinnaclereviewschool@gmail.com',
-		        pass: 'P1nn@cl3'
+		        user: config.mail.auth.user,
+		        pass: config.mail.auth.password
 		    }
 		});
 
@@ -254,7 +254,7 @@ const SubjectController = {
 				let mailOptions = {
 						from: '"Pinnacle Review School" <pinnaclereviewschool@gmail.com>',  
 						to: user.email,
-						subject: 'Pinnacle App Account Registration',
+						subject: 'Pinnacle App Subject Code',
 						html: '<p>Congratulations! You have successfuly purchased a subject code! <br><br>Subject Code : ' + subjectCode.subjectCode + '<br><br>Activate your subcription by using the mobile app or web app.<br></p>'
 					};
 				sendMail = await transporter.sendMail(mailOptions);

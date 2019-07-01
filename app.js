@@ -24,6 +24,7 @@ const subjectUpdates = require('./routes/subjectUpdates');
 const schools = require('./routes/school');
 const uploads = require('./routes/uploads');
 const question = require('./routes/question');
+const practice = require('./routes/practice');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/updates', subjectUpdates);
 app.use('/schools', schools);
 app.use('/uploads', uploads);
 app.use('/questions', question);
+app.use('/practice', practice);
 
 /* API Status*/
 app.get('/status', function(req, res){

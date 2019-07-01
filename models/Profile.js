@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const profile = mongoose.Schema({
    _id: mongoose.Schema.Types.ObjectId,
    userId: { type: String, required: true, index: { unique : true, dropDups: true } },
-   age: {type: Number, required: false },
+   birthDate: {type: Date, required: true, default: Date.now },
    gender: {type: String, required: false },
    school: {type: String, required: false },
    updatedAt: { type: Date, default: Date.now },

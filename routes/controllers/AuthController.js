@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-const config = require('../../config').auth; 
+const config = require('../../config'); 
 
 /* Model */
 const User = require('../../models/Users');
@@ -187,7 +187,7 @@ const AuthController = {
 		let decoded, user, hash, isMatch;
 
 		try {
-			decoded = await jwt.verify(token, config.secret);
+			decoded = await jwt.verify(token, config.auth.secret);
 			user = await User.findOne({ _id: decoded._id });
 			isMatch = await bcrypt.compare( _password, user.password);
 			hash = await bcrypt.hash( _newPassword, 10);
@@ -220,13 +220,14 @@ const AuthController = {
 	resetPassword: async (req, res) => {
 		let clientId = req.headers['x-client-id'];
 		let user, token, sendEmail, saveToken;
-		const transporter = nodemailer.createTransport({
-		    service: 'Gmail',
+		let transporter = nodemailer.createTransport({
+		    service: config.mail.service,
 		    auth: {
-		        user: 'pinnaclereviewschool@gmail.com',
-		        pass: 'P1nn@cl3'
+		        user: config.mail.auth.user,
+		        pass: config.mail.auth.password
 		    }
 		});
+
 		try {
 			user = await User.findOne({email: req.body.email});
 		} finally {
@@ -266,7 +267,7 @@ const AuthController = {
 					});
 				} else {
 					res.status(200).json({
-						message: 'An email has been sent.'
+						message: 'An email has been sent to '+ user.email
 					});
 				}
 			}
@@ -279,7 +280,7 @@ const AuthController = {
 		let user, decoded, changePassword, hash, deleteToken, resetPasswordToken;
 
 		try {
-			decoded = await jwt.verify(token, config.clients);
+			decoded = await jwt.verify(token, config.auth.clients);
 			user = await User.findOne({ _id: decoded._id });
 			hash = await bcrypt.hash(req.body.newPassword, 10);
 		} finally {

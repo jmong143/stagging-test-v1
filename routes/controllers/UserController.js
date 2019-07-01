@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 
+/* Config */
+const config = require('../../config'); 
+
 /* Models */
 const User = require('../../models/Users');
 const Profile = require('../../models/Profile');
@@ -53,7 +56,7 @@ const UserController = {
 					firstName: user.firstName,
 					lastName: user.lastName,
 					email: user.email,
-					age: profile.age || '',
+					birthDate: profile.birthDate || '',
 					gender: profile.gender || '',
 					school: profile.school || '',
 					subjectCode: user.subjectCode || '',
@@ -70,10 +73,10 @@ const UserController = {
 		let _password = Math.random().toString(36).substr(2, 10).toUpperCase();
 		let hash, user, saveUser, sendMail;
 		let transporter = nodemailer.createTransport({
-		    service: 'Gmail',
+		    service: config.mail.service,
 		    auth: {
-		        user: 'pinnaclereviewschool@gmail.com',
-		        pass: 'P1nn@cl3'
+		        user: config.mail.auth.user,
+		        pass: config.mail.auth.password
 		    }
 		});
 		try {
@@ -114,10 +117,16 @@ const UserController = {
 						html: '<p>Congratulations! Your Account has been created. <br><br>Temporary Password : ' + _password + '<br><br>Please Change your password using the link below.<br></p>'
 					};
 					sendMail = await transporter.sendMail(mailOptions);
-					console.log('Email has been sent to '+ saveUser.email);
-					res.status(200).json({
-						message: 'New user has been created. An Email has been sent to .'+ req.body.email
-					});
+					if (sendMail) {
+						console.log('Email has been sent to '+ saveUser.email);
+						res.status(200).json({
+							message: 'New user has been created. An Email has been sent to .'+ req.body.email
+						});
+					} else {
+						res.status(500).json({
+							message: 'Email sending failed.'
+						});
+					}
 				}
 			}
 		}

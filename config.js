@@ -14,6 +14,13 @@ const Config = {
 		password: process.env.DB_PASS,
 		port: process.env.DB_PORT,
 		atlasURI: process.env.DB_ATLAS_URI
+	},
+	mail: {
+		service: process.env.MAIL_SERVICE,
+		auth: {
+			user: process.env.MAIL_USER,
+			password: process.env.MAIL_PASSWORD
+		}
 	}
 }
 
