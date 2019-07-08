@@ -43,7 +43,7 @@ exports.fileFilter = (req, file, callback) => {
         } else {
             return callback(new Error('Only PDF files are allowed in this module.'))
         }
-    } else if (type === 'SUBJECTS' || type === 'NEWS') {
+    } else if (type === 'SUBJECTS' || type === 'NEWS' || type === 'QUESTIONS') {
         if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
             return callback(new Error('Only images are allowed'))
         } else {
