@@ -13,7 +13,7 @@ const PracticeController = {
 		let response = [];
 		
 		try {
-			topic = await Lesson.find({ _id: req.params.topicId });
+			topic = await Topic.find({ _id: req.params.topicId });
 			questions = await Question.aggregate([
 				{ $match: { topicId: req.params.topicId }},
 				{ $sample: { size: 10 }}

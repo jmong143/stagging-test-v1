@@ -157,14 +157,15 @@ const SubjectController = {
 
 				tmpKeys = Object.keys(tmpSubjects);
 				newBody = [];
-				tmpKeys.forEach((key)=> {
+				tmpKeys.forEach((key, i)=> {
 					let sb = subjects.find(x => x['id'] === key);
-
-					newBody.push({
-						id: key,
-						name: sb.name,
-						totalEnrolled: tmpSubjects[key]
-					});
+					if (sb) {
+						newBody.push({
+							id: key,
+							name: sb.name,
+							totalEnrolled: tmpSubjects[key]
+						});	
+					}
 				});
 				res.status(200).json(newBody);
 			} else {
