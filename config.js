@@ -16,7 +16,9 @@ const Config = {
 		atlasURI: process.env.DB_ATLAS_URI
 	},
 	mail: {
-		service: process.env.MAIL_SERVICE,
+		host: process.env.MAIL_SERVICE,
+		port: process.env.MAIL_PORT,
+		secureConnection: process.env.MAIL_SECURE_CONNECTION,
 		auth: {
 			user: process.env.MAIL_USER,
 			password: process.env.MAIL_PASSWORD

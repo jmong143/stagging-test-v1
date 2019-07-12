@@ -221,7 +221,9 @@ const AuthController = {
 		let clientId = req.headers['x-client-id'];
 		let user, token, sendEmail, saveToken;
 		let transporter = nodemailer.createTransport({
-		    service: config.mail.service,
+		    host: config.mail.host,
+		    secureConnection: config.mail.secureConnection,
+		    port: config.mail.port,
 		    auth: {
 		        user: config.mail.auth.user,
 		        pass: config.mail.auth.password
@@ -254,7 +256,7 @@ const AuthController = {
 				saveToken = await _token.save();
 
 				let mailOptions = {
-					from: '"Pinnacle Review School" <bulawanjp@gmail.com>',  
+					from: `Pinnacle Review School <${config.mail.auth.user}>`,  
 					to: user.email,
 					subject: 'Reset Password - Pinnacle App',
 					html: '<p>Please click on the link below to update your password. <br><br>Link: <a>https://pinnaclereviewschool.com/reset-password?expire=' + token + '</a/>'

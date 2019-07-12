@@ -58,8 +58,9 @@ const SubjectController = {
 		let decoded, user, subjectCode, subjects;
 		try {
 			decoded = await jwt.verify(token, config.secret);
-			user = await User.findOne({ _id: decoded._id});
-			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode}); 
+			user = await User.findOne({ _id: decoded._id });
+			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode }); 
+			console.log(subjectCode);
 			subjects = await Subject.find({ isArchive: false });
 		} finally {
 			if (!decoded || !user) {

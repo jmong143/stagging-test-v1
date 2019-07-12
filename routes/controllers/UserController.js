@@ -72,8 +72,11 @@ const UserController = {
 	createUser: async (req, res) => {
 		let _password = Math.random().toString(36).substr(2, 10).toUpperCase();
 		let hash, user, saveUser, sendMail;
+
 		let transporter = nodemailer.createTransport({
-		    service: config.mail.service,
+		    host: config.mail.host,
+		    secureConnection: config.mail.secureConnection,
+		    port: config.mail.port,
 		    auth: {
 		        user: config.mail.auth.user,
 		        pass: config.mail.auth.password
@@ -111,7 +114,7 @@ const UserController = {
 					});
 				} else {
 					let mailOptions = {
-						from: '"Pinnacle Review School" <pinnaclereviewschool@gmail.com>',  
+						from: `Pinnacle Review School <${config.mail.auth.user}>`,  
 						to: saveUser.email,
 						subject: 'Pinnacle App Account Registration',
 						html: '<p>Congratulations! Your Account has been created. <br><br>Temporary Password : ' + _password + '<br><br>Please Change your password using the link below.<br></p>'
@@ -120,7 +123,7 @@ const UserController = {
 					if (sendMail) {
 						console.log('Email has been sent to '+ saveUser.email);
 						res.status(200).json({
-							message: 'New user has been created. An Email has been sent to .'+ req.body.email
+							message: 'New user has been created. An Email has been sent to '+ req.body.email
 						});
 					} else {
 						res.status(500).json({

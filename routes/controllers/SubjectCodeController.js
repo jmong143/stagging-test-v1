@@ -231,13 +231,14 @@ const SubjectController = {
 		// Send Subject Code to user email 
 		let subjectCode, user; 
 		let transporter = nodemailer.createTransport({
-		    service: config.mail.service,
+		    host: config.mail.host,
+		    secureConnection: config.mail.secureConnection,
+		    port: config.mail.port,
 		    auth: {
 		        user: config.mail.auth.user,
 		        pass: config.mail.auth.password
 		    }
 		});
-
 		try {
 			subjectCode = await SubjectCode.findOne({ subjectCode: req.body.subjectCode});
 			user = await User.findOne({ email: req.body.email});
@@ -252,10 +253,10 @@ const SubjectController = {
 				});
 			} else {
 				let mailOptions = {
-						from: '"Pinnacle Review School" <pinnaclereviewschool@gmail.com>',  
+						from: `Pinnacle Review School <${config.mail.auth.user}>`,  
 						to: user.email,
 						subject: 'Pinnacle App Subject Code',
-						html: '<p>Congratulations! You have successfuly purchased a subject code! <br><br>Subject Code : ' + subjectCode.subjectCode + '<br><br>Activate your subcription by using the mobile app or web app.<br></p>'
+						html: '<p>Congratulations! You have successfuly purchased a subject code! <br><br>Subject Code : ' + subjectCode.subjectCode + '<br><br>Activate your subcription by using the mobile or web app.<br></p>'
 					};
 				sendMail = await transporter.sendMail(mailOptions);
 				if (!sendMail) {
