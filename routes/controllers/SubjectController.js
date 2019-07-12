@@ -40,7 +40,8 @@ const SubjectController = {
 					lessonId: '',
 					description: 'New Subject Added.',
 					name: saveSubject.name,
-					updatedAt: Date.now()
+					updatedAt: Date.now(),
+					isArchive: false
 				});
 				
 				await _updates.save();
@@ -59,7 +60,7 @@ const SubjectController = {
 			decoded = await jwt.verify(token, config.secret);
 			user = await User.findOne({ _id: decoded._id});
 			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode}); 
-			subjects = await Subject.find();
+			subjects = await Subject.find({ isArchive: false });
 		} finally {
 			if (!decoded || !user) {
 				res.status(401).json({ 
@@ -76,7 +77,8 @@ const SubjectController = {
 						id: subject._id,
 						name: subject.name,
 						imageUrl: subject.imageUrl,
-						createdAt: subject.createdAt 
+						createdAt: subject.createdAt,
+						isArchive: subject.isArchive
 					});
 				});
 				res.status(200).json(newBody);
@@ -91,7 +93,8 @@ const SubjectController = {
 						name: subject.name,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isEnrolled: false 
+						isEnrolled: false,
+						isArchive: subject.isArchive 
 					});
 				});
 				res.status(200).json(newBody);
@@ -117,7 +120,8 @@ const SubjectController = {
 						name: subject.name,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isEnrolled: isEnrolled 
+						isEnrolled: isEnrolled,
+						isArchive: subject.isArchive 
 					});
 				});
 				res.status(200).json(newBody);
@@ -206,6 +210,28 @@ const SubjectController = {
 				message: 'Failed to get subject codes.',
 				error: e.message
 			})
+		}
+	},
+
+	archiveSubject: async (req, res) => {
+		let archiveSubject;
+		try {
+			archiveSubject = await Subject.findOneAndUpdate(
+				{ _id: req.params.subjectId },
+				{ $set: {
+					isArchive: true
+				}},
+				{ new: true }
+			);
+
+			res.status(200).json({
+				message: 'Subject successfuly archived.'
+			});
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong',
+				error: e.message
+			});
 		}
 	}
 }

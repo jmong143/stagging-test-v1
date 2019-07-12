@@ -14,10 +14,12 @@ router.use('*', SessionController.validateApp);
 /* Subject Management */
 router.post('/', SessionController.validateAdminToken, SubjectController.createSubject);
 router.get('/enrollees/count', SessionController.validateAdminToken, SubjectController.getEnrolleesCount);
+router.delete('/:subjectId', SessionController.validateAdminToken, SubjectController.archiveSubject);
+
 /* Topics Management */
 router.post('/:subjectId/topics', SessionController.validateAdminToken, TopicController.createTopic);
 router.put('/:subjectId/topics/:topicId', SessionController.validateAdminToken, TopicController.updateTopic);
-router.post('/:subjectId/topics/:topicId/archive', SessionController.validateAdminToken, TopicController.archiveTopic)
+router.delete('/:subjectId/topics/:topicId', SessionController.validateAdminToken, TopicController.archiveTopic)
 
 /* Subjects / Topics / Lessons routes for front and admin */
 /* Subjects */ 

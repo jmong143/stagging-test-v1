@@ -19,43 +19,45 @@ const TopicController = {
 		try {
 			subject = await Subject.findOne( { _id: req.params.subjectId } ); 
 			topicCount = await Topic.count( { subjectId: req.params.subjectId } );
-		} finally {
-			if (!subject) {
-				res.status(400).json({
-					message: 'Subject does not exist.'
+
+			_topic = new Topic ({
+				_id: new mongoose.Types.ObjectId(),
+				description: req.body.description,
+				topicNumber: topicCount + 1 ,
+				subjectId: req.params.subjectId,
+				lessons: req.body.lessons,
+				createdAt: Date.now(),
+				isArchive: false
+			});
+
+			saveTopic = await _topic.save();
+
+			if(saveTopic) {
+				let _updates = new SubjectUpdates ({
+					_id: new mongoose.Types.ObjectId(),
+					subjectId: saveTopic.subjectId,
+					topicId: saveTopic.id,
+					lessonId: '',
+					description: 'New Topic Added.',
+					name: subject.name +' Topic No. '+ saveTopic.topicNumber,
+					updatedAt: Date.now()
+				});
+				
+				await _updates.save();
+				res.status(200).json({
+					message: 'New Topic has been added.',
+					topic: saveTopic
 				});
 			} else {
-
-				 _topic = new Topic ({
-					_id: new mongoose.Types.ObjectId(),
-					description: req.body.description,
-					topicNumber: topicCount + 1 ,
-					subjectId: req.params.subjectId,
-					isArchive: false
+				res.status(500).json({
+					message: 'Something went wrong.'
 				});
-
-				saveTopic = await _topic.save();
-				if(saveTopic) {
-					let _updates = new SubjectUpdates ({
-						_id: new mongoose.Types.ObjectId(),
-						subjectId: saveTopic.subjectId,
-						topicId: saveTopic.id,
-						lessonId: '',
-						description: 'New Topic Added.',
-						name: subject.name +' Topic No. '+ saveTopic.topicNumber,
-						updatedAt: Date.now()
-					});
-					
-					await _updates.save();
-					res.status(200).json({
-						message: 'New Topic has been added.'
-					});
-				} else {
-					res.status(500).json({
-						message: 'Something went wrong.'
-					});
-				}
 			}
+		} catch(e) {
+			res.status(500).json({
+				message: 'Failed to create new topic',
+				errror: e.message
+			});
 		}
 	},
 
@@ -66,7 +68,8 @@ const TopicController = {
 		let newBody = [];
 		let query = { 
 			$and: [
-				{ subjectId: req.params.subjectId }
+				{ subjectId: req.params.subjectId },
+				{ isArchive: false }
 			]};
 		try {
 			decoded = await jwt.verify(token, config.secret);
@@ -128,9 +131,10 @@ const TopicController = {
 			} else {
 				res.status(200).json({
 					id: topic._id,
-					description: topic.description,
 					topicNumber: topic.topicNumber,
+					description: topic.description,
 					subjectId: topic.subjectId,
+					lessons: topic.lessons,
 					createdAt: topic.createdAt,
 					isArchive: topic.isArchive
 				});
@@ -161,6 +165,7 @@ const TopicController = {
 					{ $set: {
 						description: req.body.description,
 						topicNumber: req.body.topicNumber,
+						lessons: req.body.lessons,
 						isArchive: req.body.isArchive
 					}},
 					{ new: true }
