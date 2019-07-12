@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 
 /* Models */
 const Question = require('../../models/Question');
-const Lesson = require('../../models/Lesson');
 const Topic = require('../../models/Topic');
 
 const PracticeController = {

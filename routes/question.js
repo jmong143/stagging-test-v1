@@ -6,10 +6,12 @@ const router = express.Router();
 const QuestionController = require('./controllers/QuestionController');
 const SessionController = require('./controllers/SessionController');
 
+router.use('*', SessionController.validateApp, SessionController.validateAdminToken);
+
 /* News Management - Admin */
-router.post('/', SessionController.validateApp, SessionController.validateAdminToken, QuestionController.addQuestion);
-router.get('/', SessionController.validateApp, SessionController.validateAdminToken, QuestionController.getQuestions);
-router.put('/:questionId', SessionController.validateApp, SessionController.validateAdminToken, QuestionController.updateQuestion);
-router.delete('/:questionId', SessionController.validateApp, SessionController.validateAdminToken, QuestionController.deleteQuestion);
+router.post('/', QuestionController.addQuestion);
+router.get('/', QuestionController.getQuestions);
+router.put('/:questionId', QuestionController.updateQuestion);
+router.delete('/:questionId', QuestionController.deleteQuestion);
 
 module.exports = router;

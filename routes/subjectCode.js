@@ -6,10 +6,12 @@ const router = express.Router();
 const SessionController = require('./controllers/SessionController');
 const SubjectCodeController = require('./controllers/SubjectCodeController');
 
+router.use('*', SessionController.validateApp, SessionController.validateAdminToken);
+
 /* SubjectCode Management Admin */
-router.post('/generate', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.generateSubjectCode);
-router.get('/', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.getSubjectCodes);
-router.get('/:subjectCodeId', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.getSubjectCode);
-router.post('/send', SessionController.validateApp, SessionController.validateAdminToken, SubjectCodeController.sendSubjectCode);
+router.post('/generate', SubjectCodeController.generateSubjectCode);
+router.get('/', SubjectCodeController.getSubjectCodes);
+router.get('/:subjectCodeId', SubjectCodeController.getSubjectCode);
+router.post('/send', SubjectCodeController.sendSubjectCode);
 
 module.exports = router;

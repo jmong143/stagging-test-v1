@@ -6,7 +6,6 @@ const config = require('../../config');
 
 /* Models */
 const Question = require('../../models/Question');
-const Lesson = require('../../models/Lesson');
 const Topic = require('../../models/Topic');
 const Exam = require('../../models/Exam');
 const User = require('../../models/Users');

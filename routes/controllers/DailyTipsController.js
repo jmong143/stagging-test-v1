@@ -20,9 +20,10 @@ const DailyTipsController = {
 					message: 'New Daily Tips has been added.'
 				});	
 			}
-		} catch(err) {
+		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.'
+				message: 'Something went wrong.',
+				error: e.message
 			});
 		}
 	},
@@ -45,9 +46,10 @@ const DailyTipsController = {
 				});
 			});
 			res.status(200).json(newBody);
-		}catch (err) {
+		} catch (e) {
 			res.status(500).json({
-				message: 'Daily Tips not Found.'
+				message: 'Daily Tips not Found.',
+				error: e.message
 			});
 		}
 	},
@@ -67,9 +69,10 @@ const DailyTipsController = {
 
 			res.status(200).json(newBody);
 
-		} catch (err) {
+		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.'
+				message: 'Something went wrong.',
+				error: e.message
 			});
 		}
 	},
@@ -94,9 +97,10 @@ const DailyTipsController = {
 				});
 			}
 
-		} catch (err) {
+		} catch (e) {
 			res.status(400).json({
-				message: 'Daily tip does not exist.'
+				message: 'Daily tip does not exist.',
+				error: e.message
 			});
 		}
 	},
@@ -120,10 +124,11 @@ const DailyTipsController = {
 				});
 			}
 
-		} catch (err) {
+		} catch (e) {
 
 			res.status(400).json({
-				message: 'Daily tip does not exist.'
+				message: 'Daily tip does not exist.',
+				error: e.message
 			});
 		}
 	}

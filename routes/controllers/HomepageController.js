@@ -23,7 +23,7 @@ const HomepageController = {
 			profile = await Profile.findOne({ userId: decoded._id}) || {};
 			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
 			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}).limit(9) || [];
-			news = await News.find().sort( { updatedAt: -1 } ).limit(9) || [];
+			news = await News.find({isArchive: false}).sort( { updatedAt: -1 } ).limit(9) || [];
 
 		} finally {
 			if (!decoded) {
@@ -58,7 +58,9 @@ const HomepageController = {
 						description: n.description,
 						imageUrl: n.imageUrl,
 						createdBy: n.createdBy,
-						createdAt: n.createdAt
+						createdAt: n.createdAt,
+						updatedAt: n.updatedAt,
+						isArchive: n.isArchive
 					});
 
 				});

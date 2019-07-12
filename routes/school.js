@@ -6,12 +6,14 @@ const router = express.Router();
 const SessionController = require('./controllers/SessionController');
 const SchoolController = require('./controllers/SchoolController');
 
+router.use('*', SessionController.validateApp);
+
 /* School Management */
-router.post('/', SessionController.validateApp, SessionController.validateAdminToken, SchoolController.addSchools);
-router.put('/:schoolId', SessionController.validateApp, SessionController.validateAdminToken, SchoolController.updateSchool);
+router.post('/', SessionController.validateAdminToken, SchoolController.addSchools);
+router.put('/:schoolId', SessionController.validateAdminToken, SchoolController.updateSchool);
 
 /* Schools - Front & Admin */
-router.get('/', SessionController.validateApp, SchoolController.getSchools);
+router.get('/', SchoolController.getSchools);
 
 
 module.exports = router;

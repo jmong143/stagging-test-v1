@@ -6,8 +6,10 @@ const router = express.Router();
 const SessionController = require('./controllers/SessionController');
 const ProfileController = require('./controllers/ProfileController');
 
+router.use('*', SessionController.validateApp);
+
 /* Profile Management */
-router.get('/', SessionController.validateApp, SessionController.validateToken, ProfileController.getProfile);
-router.put('/', SessionController.validateApp, SessionController.validateToken, ProfileController.updateProfile);
+router.get('/', SessionController.validateToken, ProfileController.getProfile);
+router.put('/', SessionController.validateToken, ProfileController.updateProfile);
 
 module.exports = router;

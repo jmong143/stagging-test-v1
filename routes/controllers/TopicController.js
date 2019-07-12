@@ -17,7 +17,6 @@ const TopicController = {
 		let subject, topicCount, _topic, saveTopic;
 
 		try {
-
 			subject = await Subject.findOne( { _id: req.params.subjectId } ); 
 			topicCount = await Topic.count( { subjectId: req.params.subjectId } );
 		} finally {
@@ -98,13 +97,15 @@ const TopicController = {
 						id: topic._id,
 						topicNumber: topic.topicNumber,
 						description: topic.description,
+						subjectId: topic.subjectId,
+						lessons: topic.lessons,
+						createdAt: topic.createdAt,
 						isArchive: topic.isArchive
 					});
 				});
 				res.status(200).json(newBody);
 			}
 		}
-
 	},
 
 	/* Get Topic Details */

@@ -62,6 +62,13 @@ app.use('/questions', question);
 app.use('/practice', practice);
 app.use('/exams', exams);
 
+// Invalid endpoint error handler
+app.use('*', (req, res)=> {
+   res.status(404).json({
+      message: 'Endpoint not found.'
+   });
+});
+
 /* API Status*/
 app.get('/status', function(req, res){
    if (connection) {

@@ -69,7 +69,7 @@ const SchoolController = {
 	getSchools: async (req, res) => {
 		let schools;
 		try {
-			schools = await School.find();
+			schools = await School.find().sort( {name: 1} );
 		} finally {
 			if(!schools) {
 				res.status(500).json({

@@ -7,36 +7,31 @@ const SessionController = require('./controllers/SessionController');
 const SubjectController = require('./controllers/SubjectController');
 const SubjectCodeController = require('./controllers/SubjectCodeController');
 const TopicController = require('./controllers/TopicController');
-const LessonController = require('./controllers/LessonController');
+
+router.use('*', SessionController.validateApp);
 
 /* Admin Exclusive Endpoints */
 /* Subject Management */
-router.post('/', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.createSubject);
-router.get('/enrollees/count', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.getEnrolleesCount);
+router.post('/', SessionController.validateAdminToken, SubjectController.createSubject);
+router.get('/enrollees/count', SessionController.validateAdminToken, SubjectController.getEnrolleesCount);
 /* Topics Management */
-router.post('/:subjectId/topics', SessionController.validateApp, SessionController.validateAdminToken, TopicController.createTopic);
-router.put('/:subjectId/topics/:topicId', SessionController.validateApp, SessionController.validateAdminToken, TopicController.updateTopic);
-router.post('/:subjectId/topics/:topicId/archive', SessionController.validateApp, SessionController.validateAdminToken, TopicController.archiveTopic)
-/* Lesson Management */
-router.post('/topics/:topicId/lessons', SessionController.validateApp, SessionController.validateAdminToken, LessonController.createLesson);
-router.put('/topics/:topicId/lessons/:lessonId', SessionController.validateApp, SessionController.validateAdminToken, LessonController.updateLesson);
-router.delete('/topics/:topicId/lessons/:lessonId', SessionController.validateApp, SessionController.validateAdminToken, LessonController.archiveLesson);
+router.post('/:subjectId/topics', SessionController.validateAdminToken, TopicController.createTopic);
+router.put('/:subjectId/topics/:topicId', SessionController.validateAdminToken, TopicController.updateTopic);
+router.post('/:subjectId/topics/:topicId/archive', SessionController.validateAdminToken, TopicController.archiveTopic)
 
 /* Subjects / Topics / Lessons routes for front and admin */
 /* Subjects */ 
-router.get('/:subjectId', SessionController.validateApp, SubjectController.getSubject);
-router.get('/:subjectId/codes', SessionController.validateApp, SessionController.validateAdminToken, SubjectController.getSubjectCodes);
-router.get('/', SessionController.validateApp, SubjectController.getSubjects);
+router.get('/:subjectId', SubjectController.getSubject);
+router.get('/:subjectId/codes', SessionController.validateAdminToken, SubjectController.getSubjectCodes);
+router.get('/', SubjectController.getSubjects);
+
 /* Topics */
-router.get('/:subjectId/topics', SessionController.validateApp, TopicController.getTopics);
-router.get('/:subjectId/topics/:topicId', SessionController.validateApp, TopicController.getTopic);
-/* Lessons */
-router.get('/topics/:topicId/lessons', SessionController.validateApp, LessonController.getLessons);
-router.get('/topics/:topicId/lessons/:lessonId', SessionController. validateApp, LessonController.getLesson);
+router.get('/:subjectId/topics', TopicController.getTopics);
+router.get('/:subjectId/topics/:topicId', TopicController.getTopic);
 
 /* Front Exclusive Endpoints */
 /* Subject Code Activation - Front*/
-router.post('/codes/activate', SessionController.validateApp, SessionController.validateToken, SubjectCodeController.activateSubjectCode);
+router.post('/codes/activate', SessionController.validateToken, SubjectCodeController.activateSubjectCode);
 
 
 module.exports = router;
