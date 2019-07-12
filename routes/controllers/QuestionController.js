@@ -1,10 +1,14 @@
 /* Dependencies */
 const mongoose = require('mongoose');
 
+const Config = require('../../config');
+
 /* Models */
 const Question = require('../../models/Question');
 const Subject = require('../../models/Subject');
 const Topic = require('../../models/Topic');
+
+const choicesCount = parseInt(Config.questions.choicesCount);
 
 const ActivityController = {
 	
@@ -12,7 +16,7 @@ const ActivityController = {
 		let question, saveQuestion;
 
 		try {
-			if (req.body.choices.length !== 4) {
+			if (req.body.choices.length !== choicesCount) {
 				throw new Error('Question must have four (4) choices.');
 			}
 
@@ -77,7 +81,7 @@ const ActivityController = {
 	updateQuestion: async (req,res) => {
 		let question, updateQuestion;
 		try {
-			if (req.body.choices.length !== 4) {
+			if (req.body.choices.length !== choicesCount) {
 				throw new Error('Question must have four (4) choices.');
 			}
 

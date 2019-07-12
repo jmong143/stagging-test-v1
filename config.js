@@ -21,6 +21,12 @@ const Config = {
 			user: process.env.MAIL_USER,
 			password: process.env.MAIL_PASSWORD
 		}
+	},
+	questions: {
+		choicesCount: process.env.QUESTION_CHOICES_COUNT,
+		practiceCount: process.env.QUESTION_PRACTICE_COUNT,
+		testCount: process.env.QUESTION_TEST_COUNT,
+		mockCount: process.env.QUESTION_MOCK_COUNT
 	}
 }
 
