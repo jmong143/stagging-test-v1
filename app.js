@@ -25,7 +25,7 @@ const schools = require('./routes/school');
 const uploads = require('./routes/uploads');
 const question = require('./routes/question');
 const practice = require('./routes/practice');
-const exams = require('./routes/exam');
+const test = require('./routes/test');
 
 const app = express();
 
@@ -60,7 +60,7 @@ app.use('/schools', schools);
 app.use('/uploads', uploads);
 app.use('/questions', question);
 app.use('/practice', practice);
-app.use('/exams', exams);
+app.use('/test', test);
 
 // Invalid endpoint error handler
 app.use('*', (req, res)=> {

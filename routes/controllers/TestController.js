@@ -4,22 +4,22 @@ const mongoose = require('mongoose');
 /* Models */
 const Question = require('../../models/Question');
 const Topic = require('../../models/Topic');
-const Practice = require('../../models/Practice');
+const Test = require('../../models/Test');
 const Subject = require('../../models/Subject');
 
 const Config = require('../../config');
 
-const questionCount = parseInt(Config.questions.practiceCount);
+const questionCount = parseInt(Config.questions.testCount);
 
-const PracticeController = {
-	createPractice: async (req,res) => {
-		let practice, savePractice, topic, subject, findPractice;
+const TestController = {
+	createTest: async (req,res) => {
+		let test, saveTest, topic, subject, findTest;
 
 		try {
-			findPractice = await Practice.findOne({ topicId: req.body.topicId });
+			findTest = await Test.findOne({ topicId: req.body.topicId });
 
-			if (findPractice) {
-				throw new Error (`Practice exam for topic ${findPractice.topicId} already exists.`);
+			if (findTest) {
+				throw new Error (`Test for topic ${findTest.topicId} already exists.`);
 			}
 
 			if(req.body.questions.length !== questionCount) {
@@ -28,7 +28,7 @@ const PracticeController = {
 
 			topic = await Topic.findOne({ _id: req.body.topicId });
 			subject = await Subject.findOne({ _id: req.body.subjectId });
-			practice = new Practice({
+			test = new Test({
 				_id: new mongoose.Types.ObjectId(),
 				questions: req.body.questions,
 				subjectId: req.body.subjectId,
@@ -36,27 +36,27 @@ const PracticeController = {
 				isArchive: false
 			});
 
-			savePractice = await practice.save();
+			saveTest = await test.save();
 
 			res.status(200).json({
-				message: 'New practice exam has been created.',
-				practice: savePractice
+				message: 'New test has been created.',
+				test: saveTest
 			});
 
 		} catch (e) {
 			res.status(500).json({
-				message: 'Failed to create practice exam.',
+				message: 'Failed to create test.',
 				error: e.message
 			});
 		}
 	},
 
 	getBySubject: async (req, res) => {
-		// Get all Practice by subjectId
-		let practice;
+		// Get all Test by subjectId
+		let test;
 		try {
-			practice = await Practice.find({ subjectId: req.params.subjectId });
-			res.status(200).json(practice);
+			test = await Test.find({ subjectId: req.params.subjectId });
+			res.status(200).json(test);
 		} catch (e) {
 			res.status(500).json({
 				message: 'Something went wrong',
@@ -66,7 +66,7 @@ const PracticeController = {
 	},
 
 	getByTopic: async (req, res) => {
-		let questions, practice, topic;
+		let questions, test, topic;
 		let query = {
 			_id: {
 				$in: []
@@ -74,8 +74,8 @@ const PracticeController = {
 		};	
 		try {
 			topic = await Topic.findOne({ _id: req.params.topicId});
-			practice = await Practice.findOne({ topicId: req.params.topicId });
-			let questionIds = practice.questions;
+			test = await Test.findOne({ topicId: req.params.topicId });
+			let questionIds = test.questions;
 
 			questionIds.forEach((id)=> {
 				query._id.$in.push(id);
@@ -84,38 +84,38 @@ const PracticeController = {
 			questions = await Question.find(query);
 			await questions.sort(()=> Math.random() - 0.5);
 			res.status(200).json({
-				id: practice._id,
+				id: test._id,
 				questions: questions,
 				total: questions.length,
-				subjectId: practice.subjectId,
-				topicId: practice.topicId,
-				isArchive: practice.isArchive
+				subjectId: test.subjectId,
+				topicId: test.topicId,
+				isArchive: test.isArchive
 			});
 
 		} catch (e) {
 			res.status(500).json({
-				message: 'Failed to get practice',
+				message: 'Failed to get test',
 				error: e.message
 			});
 		}
 	},
 
-	updatePractice: async (req,res) => {
-		let updatePractice;
+	updateTest: async (req,res) => {
+		let updateTest;
 		try {
 			if(req.body.questions.length !== questionCount) {
 				throw new Error(`Number of questions must be ${questionCount}`);
 			}
 
-			updatePractice = await Practice.findOneAndUpdate(
+			updateTest = await Test.findOneAndUpdate(
 				{ topicId: req.params.topicId },
 				{ "$set": {
 					questions: req.body.questions
 				}},
 				{ $new: true });
 			res.status(200).json({
-				message: 'Practice exam successfully updated.',
-				practice: updatePractice
+				message: 'Test successfully updated.',
+				test: updateTest
 			});
 
 		} catch (e) {
@@ -126,26 +126,36 @@ const PracticeController = {
 		}
 	},
 
-	deletePractice: async (req,res) => {
-		let deletePractice;
+	deleteTest: async (req,res) => {
+		let deleteTest;
 
 		try {
-			deletePractice = await Practice.findOneAndDelete({ topicId: req.params.topicId });
-			if (!deletePractice) {
-				throw new Error('Practice exam does not exist');
+			deleteTest = await Test.findOneAndDelete({ topicId: req.params.topicId });
+			if (!deleteTest) {
+				throw new Error('Test does not exist');
 			}
 
 			res.status(200).json({
-				message: 'Practice exam successfully deleted.'
+				message: 'Test successfully deleted.'
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Failed to delete practice exam.',
+				message: 'Failed to delete test.',
 				error: e.message
 			});
 		}
+	},
+
+	// Submit answers
+	evaluateTest: async (req, res) => {
+
+	},
+
+	// Get Results
+	getResult: async (req, res) => {
+
 	}
 }
 
 
-module.exports = PracticeController;
+module.exports = TestController;

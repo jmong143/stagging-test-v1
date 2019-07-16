@@ -130,8 +130,11 @@ const SubjectController = {
 		}
 	},
 
-	getSubject: (req, res) => {
-		Subject.findOne({_id: req.params.subjectId }).exec(function (err, subject) {
+	getSubject: async (req, res) => {
+		let subject;
+
+		try {
+			subject = await Subject.findOne({ _id: req.params.subjectId });
 			res.status(200).json({
 				id: subject._id,
 				name: subject.name,
@@ -139,7 +142,12 @@ const SubjectController = {
 				imageUrl: subject.imageUrl,
 				createdAt: subject.createdAt
 			});
-		});
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong',
+				error: e.message
+			})
+		}
 	},
 
 	getEnrolleesCount: async (req, res) => {
