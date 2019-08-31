@@ -7,6 +7,7 @@ const topic = mongoose.Schema({
    subjectId : { type: String, required: true },
    lessons: { type: Array, required: true, default: []},
    createdAt: { type: Date, default: Date.now },
+   updatedAt: { type: Date },
    isArchive: { type: Boolean, default: false }
 });
 

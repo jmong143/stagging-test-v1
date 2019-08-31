@@ -10,20 +10,50 @@ const User = require('../../models/Users');
 const ActivityController = require('./ActivityController');
 const Subject = require('../../models/Subject');
 const SubjectCode = require('../../models/SubjectCode');
+const SubjectCodesSent = require('../../models/SubjectCodesSent');
 
 const tag = 'Subscription';
+
+
+// Nodemailer Options
+const transporter = nodemailer.createTransport({
+    host: config.mail.host,
+    secureConnection: config.mail.secureConnection,
+    port: config.mail.port,
+    auth: {
+        user: config.mail.auth.user,
+        pass: config.mail.auth.password
+    }
+});
 
 const SubjectController = {
 
 	generateSubjectCode: async (req, res) => {
 
-		let subjectCode = Math.random().toString(36).substr(2, 8).toUpperCase();
 		let _subjects = [];
 		let subjects;
 		let list = {};
+		// Subject code count to be generated
+		let count = req.body.count || 1;
+		// Organization Name 
+		let organizationName = req.body.organizationName || '';
+		// email 
+		let email = req.body.email;
+		// Container of subject codes
+		let docs = [];
 
 		try {
+			// Validations
+			if (!email) {
+				throw new Error("Email address is required")
+			}
+
+			// Get Subjects
 			subjects = await Subject.find();
+
+			// Get all Subject Names
+			// { subjectId: subjectName };
+
 			if(subjects) {
 				subjects.forEach((subject) => {
 					list[subject._id] = subject.name
@@ -39,27 +69,76 @@ const SubjectController = {
 					_subjects.push({
 						subjectId: subject,
 						name: list[subject] || '',
-						progress: 0
 					});
 				});	
 			}
 
-			const _subjectCode = new SubjectCode ({
-				_id: new mongoose.Types.ObjectId(),
-				subjectCode: subjectCode,
-				subjects: _subjects
+			// Generate Subject codes based on count
+			for (i = 0; i < count; i++) {
+				let subjectCode = Math.random().toString(36).substr(2, 8).toUpperCase();
+				docs.push({
+					_id: new mongoose.Types.ObjectId(),
+					subjectCode: subjectCode,
+					subjects: _subjects,
+					organizationName: organizationName,
+					createdAt: Date.now()
+				});
+			}
+
+			// Save subject Codes to DB
+
+			let saveSubjectCodes = await SubjectCode.insertMany(docs);
+
+			// Store List of saved Subject Codes
+			let savedIds = [];
+			saveSubjectCodes.forEach((code)=> {
+				savedIds.push(code.subjectCode);
 			});
 
-			const result = await _subjectCode.save(); 
-			res.status(200).json({
-				message: 'Subject Code has been generated.',
-				id: result._id,
-				subjectCode: result.subjectCode,
-				subjects: result.subjects
+			let codesToString = '';
+
+			// Send Email 
+			savedIds.forEach((id, index)=> {
+				codesToString += (index+1)+'. <b>' +id + '</b><br>';
 			});
-		}	catch (e) {
+
+			let mailOptions = {
+				from: `Pinnacle Review School <${config.mail.auth.user}>`,  
+				to: email,
+				subject: 'Pinnacle App Subject Code Purchase',
+				html: '<p>Congratulations! Your Subject Code(s) are now ready for activation! <br><br>'+
+				'Organization Name: ' + saveSubjectCodes[0].organizationName + '<br><br>'+
+				'Subject Codes: <br><br>'+ codesToString + '<br>'+
+				'Activate your Subject Codes by using the mobile or web app.<br></p>'
+			};
+
+			let sendMail = await transporter.sendMail(mailOptions);
+
+			// to be used when resending emails
+			let saveMessage = new SubjectCodesSent ({
+				_id: new mongoose.Types.ObjectId(),
+				to: mailOptions.to,
+				subject: mailOptions.subject,
+				organizationName: organizationName,
+				html: mailOptions.html,
+				createdAt: Date.now()
+			});
+
+			await saveMessage.save();
+
+			// Response
+			res.status(200).json({
+				message: 'Subject Code(s) has been successfully generated and has been sent to '+email,
+				details: {
+					organizationName: saveSubjectCodes[0].organizationName,
+					createdAt: saveSubjectCodes[0].createdAt,
+					codes: savedIds
+				}
+			});
+		} catch (e) {
 			res.status(500).json({
-				message: 'Failed to generate subject code.'
+				message: 'Failed to generate subject code.',
+				error: e.message
 			});
 		}	
 	},
@@ -67,28 +146,65 @@ const SubjectController = {
 	getSubjectCodes: async (req, res) => {
 
 		let subjectCodes;
+		let query = [{ $match: { createdAt: { $exists: true }} }];
+
+		// Search
+		let keyword = req.query.keyword;
+		if (keyword) {
+			query.push( {$match:{ $or: [
+					{"email": {'$regex': keyword, '$options' : 'i'}},
+					{"organizationName":{'$regex': keyword, '$options' : 'i'}}
+				]} 
+			});
+		}
+
+		// Pagination:
+		let count = 0;
+		let pageItems = parseInt(config.pagination.defaultItemsPerPage);
+		let pageNumber = 1;
+
 		let newBody = {
-			list: [],
-			total: 0
-		};
+			pageNumber: 0,
+			totalPages: 0,
+			itemsPerPage: 0,
+			totalItems: 0,
+			items: [],
+		}
+
+		if (req.query.pageNumber) {
+			pageNumber = parseInt(req.query.pageNumber);
+		}
+
+		if (req.query.pageItems) {
+			pageItems = parseInt(req.query.pageItems);
+
+		}
 
 		try {
-			subjectCodes = await SubjectCode.find();
-		} finally {
-			if (!subjectCodes) {
-				res.status(200).json(newBody);
-			} else if (subjectCodes.length > 0) {
-				subjectCodes.forEach((subjectCode)=>{
-					newBody.list.push({
-						id: subjectCode._id,
-						subjectCode: subjectCode.subjectCode,
-						userId: subjectCode.userId || '',
-						subjects: subjectCode.subjects
-					});
+			count = await SubjectCode.aggregate(query);
+			count = count.length;
+			subjectCodes = await SubjectCode.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems);
+			newBody.pageNumber = parseInt(pageNumber);
+            newBody.totalPages = Math.ceil(count / pageItems);
+            newBody.itemsPerPage = pageItems;
+            newBody.totalItems = count;
+
+            subjectCodes.forEach((code)=>{
+            	newBody.items.push({
+					id: code._id,
+					subjectCode: code.subjectCode,
+					userId: code.userId || '',
+					subjects: code.subjects,
+					organizationName: code.organizationName || '',
 				});
-				newBody.total = subjectCodes.length;
-				res.status(200).json(newBody);
-			}		
+            });
+
+            res.status(200).json(newBody);
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			})
 		}
 	},
 
@@ -106,6 +222,7 @@ const SubjectController = {
 					id: subjectCode._id,
 					subjectCode: subjectCode.subjectCode,
 					userId: subjectCode.userId || '',
+					organizationName: subjectCode.organizationName,
 					createdAt: subjectCode.createdAt,
 					activatedAt: subjectCode.activatedAt || '',
 					expiresAt: subjectCode.expiresAt || '',
@@ -227,18 +344,11 @@ const SubjectController = {
 		}	
 	},
 
+	// Depreciated - Use resend instead
 	sendSubjectCode: async (req,res) => {
 		// Send Subject Code to user email 
 		let subjectCode, user; 
-		let transporter = nodemailer.createTransport({
-		    host: config.mail.host,
-		    secureConnection: config.mail.secureConnection,
-		    port: config.mail.port,
-		    auth: {
-		        user: config.mail.auth.user,
-		        pass: config.mail.auth.password
-		    }
-		});
+
 		try {
 			subjectCode = await SubjectCode.findOne({ subjectCode: req.body.subjectCode});
 			user = await User.findOne({ email: req.body.email});
@@ -270,6 +380,96 @@ const SubjectController = {
 					console.log('Email has been sent to '+ user.email);				
 				}
 			}
+		}
+	},
+
+	resendSubjectCodes: async (req, res) => {
+		let sentCodes, resendEmail;
+		let sentCodesId = req.body.id;
+		let email = req.body.email;
+
+		try {
+			sentCodes = await SubjectCodesSent.findOne({ _id: sentCodesId });
+			let mailOptions = {
+				from: `Pinnacle Review School <${config.mail.auth.user}>`,  
+				to: email,
+				subject: sentCodes.subject,
+				html: sentCodes.html
+			};
+
+			resendEmail = await transporter.sendMail(mailOptions);
+
+			res.status(200).json({
+				message: 'Email has been sent to '+ email
+			});
+		} catch (e) {
+			res.status(500).json({
+				message: 'Failed to resend email.',
+				error: e.message
+			});
+		}
+	},
+
+	getSentSubjectCodes: async (req, res) => {
+		let sentCodes;
+		let query = [{ $match: { createdAt: { $exists: true }} }];
+
+		// Search
+		let keyword = req.query.keyword;
+		if (keyword) {
+			query.push( {$match:{ $or: [
+					{"to": {'$regex': keyword, '$options' : 'i'}},
+					{"organizationName":{'$regex': keyword, '$options' : 'i'}}
+				]} 
+			});
+		}
+
+		// Pagination:
+		let count = 0;
+		let pageItems = parseInt(config.pagination.defaultItemsPerPage);
+		let pageNumber = 1;
+
+		let newBody = {
+			pageNumber: 0,
+			totalPages: 0,
+			itemsPerPage: 0,
+			totalItems: 0,
+			items: [],
+		}
+
+		if (req.query.pageNumber) {
+			pageNumber = parseInt(req.query.pageNumber);
+		}
+
+		if (req.query.pageItems) {
+			pageItems = parseInt(req.query.pageItems);
+
+		}
+		try {
+			count = await SubjectCodesSent.aggregate(query);
+			count = count.length
+			sentCodes = await SubjectCodesSent.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems);;
+			newBody.pageNumber = parseInt(pageNumber);
+            newBody.totalPages = Math.ceil(count / pageItems);
+            newBody.itemsPerPage = pageItems;
+            newBody.totalItems = count;
+            sentCodes.forEach((code)=> {
+            	newBody.items.push({
+            		id: code._id,
+            		to: code.to,
+            		subject: code.subject,
+            		organizationName: code.organizationName,
+            		content: code.html,
+            		createdAt: code.createdAt
+            	});
+            });
+
+			res.status(200).json(newBody);
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
 		}
 	}
 }

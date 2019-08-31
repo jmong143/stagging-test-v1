@@ -15,7 +15,7 @@ router.use('*', SessionController.validateApp);
 router.post('/', SessionController.validateAdminToken, SubjectController.createSubject);
 router.get('/enrollees/count', SessionController.validateAdminToken, SubjectController.getEnrolleesCount);
 router.delete('/:subjectId', SessionController.validateAdminToken, SubjectController.archiveSubject);
-
+router.put('/:subjectId', SessionController.validateAdminToken, SubjectController.updateSubject);
 /* Topics Management */
 router.post('/:subjectId/topics', SessionController.validateAdminToken, TopicController.createTopic);
 router.put('/:subjectId/topics/:topicId', SessionController.validateAdminToken, TopicController.updateTopic);

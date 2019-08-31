@@ -29,6 +29,9 @@ const Config = {
 		practiceCount: process.env.QUESTION_PRACTICE_COUNT,
 		testCount: process.env.QUESTION_TEST_COUNT,
 		mockCount: process.env.QUESTION_MOCK_COUNT
+	},
+	pagination: {
+		defaultItemsPerPage: process.env.PAGINATION_DEFAULT
 	}
 }
 

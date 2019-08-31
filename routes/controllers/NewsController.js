@@ -1,7 +1,7 @@
 /* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const config = require('../../config').auth; 
+const config = require('../../config'); 
 
 /* Model */
 const News = require('../../models/News');
@@ -16,7 +16,7 @@ const DailyTipsController = {
 
 		try {
 
-			decoded = await jwt.verify(token, config.secret);
+			decoded = await jwt.verify(token, config.auth.secret);
 			user = await User.findOne({ _id: decoded._id});
 
 		} finally {
@@ -56,42 +56,66 @@ const DailyTipsController = {
 	getNews: async (req, res) => {
 		let token = req.headers['token'];
 		let news, user, decoded;
-		let newBody = [];
-		let query = {};
+
+		let query = [{ $match: { createdAt: { $exists: true }} }];
+		// Pagination
+		// Pagination:
+		let count = 0;
+		let pageItems = parseInt(config.pagination.defaultItemsPerPage);
+		let pageNumber = 1;
+
+
+		let newBody = {
+			pageNumber: 0,
+			totalPages: 0,
+			itemsPerPage: 0,
+			totalItems: 0,
+			items: [],
+		}
+
+		if (req.query.pageNumber) {
+			pageNumber = parseInt(req.query.pageNumber);
+		}
+
+		if (req.query.pageItems) {
+			pageItems = parseInt(req.query.pageItems);
+
+		}
 
 		try {
-			decoded = await jwt.verify(token, config.secret);
+			decoded = await jwt.verify(token, config.auth.secret);
 			user = await User.findOne({ _id: decoded._id});
 			
 			// Show only unarchived news on non-admin users
 			if (user.isAdmin === false) {
-				query = { isArchive: false };
+				query.push({ $match: { isArchive: false }});
 			}
 
-			news = await News.find(query).sort({"createdAt": -1});
-		} finally {
-			if (!decoded){
-					res.status(401).json({
-					message: 'Unauthorized.'
+			count = await News.aggregate(query).sort({"createdAt": -1});
+			count = count.length;
+			news = await News.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems).sort({"createdAt": -1});
+			newBody.pageNumber = parseInt(pageNumber);
+            newBody.totalPages = Math.ceil(count / pageItems);
+            newBody.itemsPerPage = pageItems;
+            newBody.totalItems = count;
+
+            news.forEach((n) => {
+				newBody.items.push({
+					id: n._id,
+					title: n.title,
+					dsecription: n.description,
+					imageUrl: n.imageUrl,
+					createdBy: n.createdBy,
+					createdAt: n.createdAt,
+					isArchive: n.isArchive
 				});
-			}else if (news) {
-				news.forEach((n) => {
-					newBody.push({
-						id: n._id,
-						title: n.title,
-						dsecription: n.description,
-						imageUrl: n.imageUrl,
-						createdBy: n.createdBy,
-						createdAt: n.createdAt,
-						isArchive: n.isArchive
-					});
-				});
-				res.status(200).json(newBody);
-			} else {
-				res.status(500).json({
-					message: 'Something went wrong.'
-				});
-			}
+			});
+			res.status(200).json(newBody);
+		} catch(e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
 		}
 	},
 
