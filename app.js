@@ -61,9 +61,11 @@ app.use('/uploads', uploads);
 app.use('/questions', question);
 app.use('/practice', practice);
 app.use('/test', test);
+app.use('/goals', require('./routes/goal'));
 
 // Invalid endpoint error handler
 app.use('*', (req, res)=> {
+
    res.status(404).json({
       message: 'Endpoint not found.'
    });
