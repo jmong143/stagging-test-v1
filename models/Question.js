@@ -7,7 +7,7 @@ const question = mongoose.Schema({
    answer: { type: String, required: true },
    subjectId: { type: String, required: true },
    topicId: { type: String, required: true },
-   difficulty: { type: String, required: true },
+   difficulty: { type: String, required: true }, // to be removed
    resourceUrl: { type: String },
    isArchive: { type: Boolean, required: true }
 });

@@ -242,6 +242,32 @@ const SubjectController = {
 				error: e.message
 			});
 		}
+	},
+
+	updateSubject: async (req, res) => {
+		let subject, updateSubject;
+		try {
+			subject = await Subject.findOne({ _id: req.params.id });
+			updateSubject = await Subject.findOneAndUpdate(
+				{ _id: req.params.subjectId },
+				{ $set: {
+					code: req.body.code,
+					name: req.body.name,
+					description: req.body.description,
+					imageUrl: req.body.imageUrl,
+					isArchive: req.body.isArchive
+				}},
+				{ new: true });
+			res.status(200).json({
+				message: 'Subject details successfully updated.',
+				details: updateSubject
+			})
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
+		}
 	}
 }
 

@@ -31,28 +31,17 @@ const TopicController = {
 			});
 
 			saveTopic = await _topic.save();
-
-			if(saveTopic) {
-				let _updates = new SubjectUpdates ({
-					_id: new mongoose.Types.ObjectId(),
+			res.status(200).json({
+				message: "Topic Successfully added.",
+				details: {
+					id: saveTopic._id,
+					description: saveTopic.description,
 					subjectId: saveTopic.subjectId,
-					topicId: saveTopic.id,
-					lessonId: '',
-					description: 'New Topic Added.',
-					name: subject.name +' Topic No. '+ saveTopic.topicNumber,
-					updatedAt: Date.now()
-				});
-				
-				await _updates.save();
-				res.status(200).json({
-					message: 'New Topic has been added.',
-					topic: saveTopic
-				});
-			} else {
-				res.status(500).json({
-					message: 'Something went wrong.'
-				});
-			}
+					lessons: saveTopic.lessons,
+					createdAt: saveTopic.createdAt,
+					isArchive: saveTopic.isArchive
+				}
+			});
 		} catch(e) {
 			res.status(500).json({
 				message: 'Failed to create new topic',
@@ -153,44 +142,38 @@ const TopicController = {
 					{ subjectId: req.params.subjectId}
 				]
 			});
-			subject = await Subject.findOne( { _id: topic.subjectId } );
-		} finally {
-			if(!topic) {
-				res.status(400).json({
-					message: 'Topic does not exist.'
-				});
-			} else {
-				updateTopic = await Topic.findOneAndUpdate(
-					{ _id: req.params.topicId},
-					{ $set: {
-						description: req.body.description,
-						topicNumber: req.body.topicNumber,
-						lessons: req.body.lessons,
-						isArchive: req.body.isArchive
-					}},
-					{ new: true }
-				);
-				if (updateTopic) {
-					let _updates = new SubjectUpdates ({
-						_id: new mongoose.Types.ObjectId(),
-						subjectId: updateTopic.subjectId,
-						topicId: updateTopic.id,
-						lessonId: '',
-						description: 'Updated Topic.',
-						name: subject.name +' Topic No. '+ updateTopic.topicNumber,
-						updatedAt: Date.now()
-					});
-					
-					await _updates.save();
-					res.status(200).json({
-						message: 'Topic details successfuly updated.'
-					});
-				} else {
-					res.status(500).json({
-						message: 'Something went wrong.'
-					});
+			subject = await Subject.findOne({ _id: topic.subjectId });
+			updateTopic = await Topic.findOneAndUpdate(
+				{ _id: req.params.topicId},
+				{ $set: {
+					description: req.body.description,
+					topicNumber: req.body.topicNumber,
+					lessons: req.body.lessons,
+					isArchive: req.body.isArchive,
+					updatedAt: Date.now()
+				}},
+				{ new: true }
+			);
+			
+			res.status(200).json({
+				message: 'Topic details successfuly updated.',
+				details: {
+					id: updateTopic._id,
+					description: updateTopic.description,
+					topicNumber: updateTopic.topicNumber,
+					subjectId: updateTopic.subjectId,
+					lessons: updateTopic.lessons,
+					createdAt: updateTopic.createdAt,
+					updatedAt: updateTopic.updatedAt,
+					isArchive: updateTopic.isArchive
 				}
-			}
+			});
+
+		} catch(e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			})
 		}
 	},
 
@@ -204,24 +187,22 @@ const TopicController = {
 					{ subjectId: req.params.subjectId}
 				]
 			});
-		} finally {
-			if(!topic) {
-				res.status(400).json({
-					message: 'Topic does not exist.'
-				});
-			} else {
-				await Topic.findOneAndUpdate(
-					{ _id: req.params.topicId},
-					{ $set: {
-						isArchive: true
-					}},
-					{ new: true }
-				);
+			await Topic.findOneAndUpdate(
+				{ _id: req.params.topicId},
+				{ $set: {
+					isArchive: true
+				}},
+				{ new: true }
+			);
 
-				res.status(200).json({
-					message: 'Topic successfuly archived.'
-				});
-			}
+			res.status(200).json({
+				message: 'Topic successfuly archived.'
+			});
+		} catch(e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
 		}
 	}
 }

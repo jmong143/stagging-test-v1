@@ -10,12 +10,18 @@ const config = require('../../config');
 const User = require('../../models/Users');
 const Profile = require('../../models/Profile');
 
-const UserController = {
+const UserController =  {
 
-	getUsers: (req, res) => {
+	getUsers: async (req, res) => {
+
+		// Search + filters
 		let keyword = req.query.keyword;
-		let query = [{ $match: {isAdmin: false} }];
-
+		let isAdmin = req.query.isAdmin;
+		let query = [{ $match: {isActive: true} }];
+		let Users;
+		if (isAdmin) {
+			query.push({ $match: { isAdmin: !!isAdmin }});
+		}
 		if (keyword) {
 			query.push( {$match:{ $or: [
 					{"firstName": {'$regex': '^'+keyword, '$options' : 'i'}},
@@ -24,49 +30,95 @@ const UserController = {
 				]} 
 			});
 		}
-		User.aggregate(query).exec(function(err, users) {
-			let newBody = {
-				users: [],
-				total: users.length
-			};
-			users.forEach((user)=>{
-				newBody.users.push({
+
+		// Pagination:
+		let count = 0;
+		let pageItems = parseInt(config.pagination.defaultItemsPerPage);
+		let pageNumber = 1;
+
+		let newBody = {
+			pageNumber: 0,
+			totalPages: 0,
+			itemsPerPage: 0,
+			totalItems: 0,
+			items: [],
+		}
+
+		if (req.query.pageNumber) {
+			pageNumber = parseInt(req.query.pageNumber);
+		}
+
+		if (req.query.pageItems) {
+			pageItems = parseInt(req.query.pageItems);
+
+		}
+
+		try {
+
+			count = await User.aggregate(query);
+			count = count.length;
+			Users = await User.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems);
+			newBody.pageNumber = parseInt(pageNumber);
+            newBody.totalPages = Math.ceil(count / pageItems);
+            newBody.itemsPerPage = pageItems;
+            newBody.totalItems = count;
+
+            Users.forEach((user)=> {
+            	newBody.items.push({
 					id: user._id,
 					firstName: user.firstName,
 					lastName: user.lastName,
 					email: user.email,
 					subjectCode: user.subjectCode,
 					createdAt: user.createdAt,
-					isArchive: user.isArchive
+					updatedAt: user.updatedAt,
+					isArchive: user.isArchive,
+					isAdmin: user.isAdmin,
+					isActive: user.isActive
 				});
+            });
+
+            res.status(200).json(newBody);
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong',
+				error: e.message
 			});
-			res.status(200).json(newBody);
-		});
+		}
+		
 	},
 
-	getUser: (req, res) => {
+	getUser: async (req, res) => {
 
-		Profile.findOne({ userId: req.params.userId }).exec(function(err, profile){
-			let _profile = {};
-			if (!profile) {
-				profile = _profile;
-			}			
-			User.findOne({ _id: req.params.userId}).exec(function(err,user){
-				res.status(200).json({
-					firstName: user.firstName,
-					lastName: user.lastName,
-					email: user.email,
-					birthDate: profile.birthDate || '',
-					gender: profile.gender || '',
-					school: profile.school || '',
-					subjectCode: user.subjectCode || '',
-					updatedAt: profile.updatedAt || '',
-					createdAt: user.createdAt || '',
-					isActive: user.isActive || '',
-					isArchive: user.isArchive
-				});
-			});		
-		});	
+		let user, profile;
+
+		try {
+			user = await User.findOne({ _id: req.params.userId });
+			if (user.isAdmin === false) {
+				profile = await Profile.findOne({ userId: req.params.userId });
+			}
+			res.status(200).json({
+				id: user._id,
+				firstName: user.firstName,
+				middleName: user.middleName,
+				lastName: user.lastName,
+				email: user.email,
+				birthDate: profile.birthDate || '',
+				gender: profile.gender || '',
+				school: profile.school || '',
+				subjectCode: user.subjectCode || '',
+				updatedAt: user.updatedAt || '',
+				createdAt: user.createdAt || '',
+				isActive: user.isActive || '',
+				isArchive: user.isArchive,
+				isAdmin: user.isAdmin
+			});
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
+		}
 	},
 
 	createUser: async (req, res) => {
@@ -82,6 +134,7 @@ const UserController = {
 		        pass: config.mail.auth.password
 		    }
 		});
+
 		try {
 			hash = await bcrypt.hash(_password,10);
 			user = await User.findOne( { email: req.body.email } );
@@ -100,11 +153,14 @@ const UserController = {
 					email: req.body.email,
 					password: hash,
 					firstName: req.body.firstName,
+					middleName: req.body.middleName,
 					lastName: req.body.lastName,
 					subjectCode: req.body.subjectCode,
 					isArchive: false,
 					isActive: true,
-					isAdmin: false					
+					isAdmin: req.body.isAdmin || false,
+					createdAt: Date.now(),
+					updatedAt: Date.now()					
 				});
 
 				saveUser = await _user.save();
@@ -184,6 +240,43 @@ const UserController = {
 					message: 'User account successfuly reactivated.'
 				});	
 			}		
+		}
+	},
+
+	updateUser: async (req, res) => {
+		// update user detials
+		let user, updateUser;
+		try {
+			user = await User.findOne({ _id: req.params.userId });
+			updateUser = await User.findOneAndUpdate(
+				{ _id : user._id },
+				{ $set: {
+					email: req.body.email,
+					firstName: req.body.firstName,
+					middleName: req.body.middleName,
+					lastName: req.body.lastName,
+					subjectCode: req.body.subjectCode,
+					updatedAt: Date.now()
+				}},
+				{ new: true }
+			);
+			console.log(updateUser);
+			res.status(200).json({
+				message: 'User Details successfuly updated.',
+				details: {
+					email: updateUser.email,
+					firstName: updateUser.firstName,
+					middleName: updateUser. middleName,
+					lastName: updateUser.lastName,
+					subjectCode: updateUser.subjectCode,
+					updatedAt: updateUser.updatedAt
+				}
+			}); 
+		} catch (e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
 		}
 	}
 }
