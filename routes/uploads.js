@@ -106,8 +106,12 @@ router.get('/:filename', SessionController.validateApp, (req, res) => {
 		    	message: 'File Does not Exist.'
 			});
 		}
-		//console.log('[GET][FILE]: '+ JSON.stringify(file));
 		
+		// console.log(file.contentType);
+		res.set({
+			'content-type': file.contentType
+		});
+
 		let readstream = gfs.createReadStream(file.filename);
         readstream.pipe(res);
 	});

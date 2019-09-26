@@ -56,6 +56,7 @@ const HomepageController = {
 						id: n._id,
 						title: n.title,
 						description: n.description,
+						author: n.author,
 						imageUrl: n.imageUrl,
 						createdBy: n.createdBy,
 						createdAt: n.createdAt,

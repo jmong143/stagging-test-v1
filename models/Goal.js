@@ -18,6 +18,7 @@ const GoalSchema = mongoose.Schema({
    currentValue: { type: Number, default: 0 },
    isCompleted: { type: Boolean, default: false },
    isArchive: { type: Boolean, default: false },
+   status: { type: String, default: 'ongoing'}
 });
 
 const PreGoal = mongoose.model('PreGoal', PreGoalSchema);

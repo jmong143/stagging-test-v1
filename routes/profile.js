@@ -9,7 +9,7 @@ const ProfileController = require('./controllers/ProfileController');
 router.use('*', SessionController.validateApp);
 
 /* Profile Management */
-router.get('/', SessionController.validateToken, ProfileController.getProfile);
-router.put('/', SessionController.validateToken, ProfileController.updateProfile);
+router.get('/', ProfileController.getProfile);
+router.put('/', ProfileController.updateProfile);
 
 module.exports = router;

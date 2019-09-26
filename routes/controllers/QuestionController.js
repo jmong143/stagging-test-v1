@@ -27,13 +27,15 @@ const ActivityController = {
 			question = new Question({
 				_id: new mongoose.Types.ObjectId(),
 				question: req.body.name,
+				solution: req.body.solution,
 				choices: req.body.choices,
 				answer: req.body.answer,
 				subjectId: req.body.subjectId,
 				topicId: req.body.topicId,
-				difficulty: req.body.difficulty,
 				resourceUrl: req.body.resourceUrl,
-				isArchive: false
+				isArchive: false,
+				createdAt: Date.now(),
+				updatedAt: Date.now()
 			});
 
 			saveQuestion = await question.save();
@@ -93,20 +95,21 @@ const ActivityController = {
 				{ _id: req.params.questionId},
 				{ $set: {
 					question: req.body.question,
+					solution: req.body.solution,
 					choices: req.body.choices,
 					answer: req.body.answer,
 					subjectId: req.body.subjectId,
 					topicId: req.body.topicId,
-					difficulty: req.body.difficulty,
 					resourceUrl: req.body.resourceUrl,
-					isArchive: req.body.isArchive
+					isArchive: req.body.isArchive,
+					updatedAt: Date.now()
 				}},
 				{ new: true }
 			);
 
 			res.status(200).json({
 				message: 'Question successfuly updated.',
-				question: updateQuestion
+				details: updateQuestion
 			})
 		} catch (e) {
 			res.status(500).json({

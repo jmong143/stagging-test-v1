@@ -26,6 +26,7 @@ const uploads = require('./routes/uploads');
 const question = require('./routes/question');
 const practice = require('./routes/practice');
 const test = require('./routes/test');
+const mock = require('./routes/mock');
 
 const app = express();
 
@@ -62,14 +63,7 @@ app.use('/questions', question);
 app.use('/practice', practice);
 app.use('/test', test);
 app.use('/goals', require('./routes/goal'));
-
-// Invalid endpoint error handler
-app.use('*', (req, res)=> {
-
-   res.status(404).json({
-      message: 'Endpoint not found.'
-   });
-});
+app.use('/mock', mock);
 
 /* API Status*/
 app.get('/status', function(req, res){
@@ -82,6 +76,14 @@ app.get('/status', function(req, res){
          "message": "Database Connection Error"
       });   
     }   
+});
+
+// Invalid endpoint error handler
+app.use('*', (req, res)=> {
+
+   res.status(404).json({
+      message: 'Endpoint not found.'
+   });
 });
 
 app.listen(config.server.port, function(){

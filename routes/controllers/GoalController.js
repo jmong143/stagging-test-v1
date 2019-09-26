@@ -110,10 +110,35 @@ const GoalController = {
             else res.status(400).json({ message: `No goal records found`});
         });
     },
-    getGoalsProgress: (req, res) => {
+    getGoals: (req, res) => {
+        let userId = jwt.verify(req.headers['token'], config.secret )._id;
+        console.log(userId);
 
+        models.Goal.find({userId: userId}, (err, goals) => {
+            if(err) {
+                res.status(500).json({
+                    message: `get records failed. ${err}`
+                });
+            } else {
+                let formatResponse = [];
+
+                goals.forEach( goal => formatResponse.push({
+                    id: goal._id,
+                    currentValue: goal.currentValue,
+                    isCompleted: goal.isCompleted,
+                    isArchive: goal.isArchive,
+                    userId: goal.userId,
+                    goalType: goal.goalType,
+                    description: goal.description,
+                    targetValue: goal.targetValue,
+                    deadline: goal.deadline,
+                    dateCreated: goal.dateCreated
+                }));
+                
+                res.status(200).json(formatResponse.length > 0 ? formatResponse : {message: "No goal records found"});
+            }
+        });
     }
 }
 
 module.exports = GoalController;
-

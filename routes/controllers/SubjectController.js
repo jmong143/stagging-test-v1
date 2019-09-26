@@ -16,40 +16,25 @@ const SubjectController = {
 		// Create new Subject
 		let saveSubject, saveUpdate;
 
-		const _subject = new Subject ({
-			_id: new mongoose.Types.ObjectId(),
-			name: req.body.name,
-			code: req.body.code,
-			description: req.body.description,
-			imageUrl: req.body.imageUrl
-		});
-
 		try {
+			const _subject = new Subject ({
+				_id: new mongoose.Types.ObjectId(),
+				name: req.body.name,
+				code: req.body.code,
+				description: req.body.description,
+				imageUrl: req.body.imageUrl
+			});
 			saveSubject = await _subject.save();
-		} finally {
-			if (!saveSubject) {
-				//console.log(err);
-				res.status(500).json({
-					message: 'Something went wrong.'
-				});
-			} else {
-				let _updates = new SubjectUpdates ({
-					_id: new mongoose.Types.ObjectId(),
-					subjectId: saveSubject.id,
-					topicId: '',
-					lessonId: '',
-					description: 'New Subject Added.',
-					name: saveSubject.name,
-					updatedAt: Date.now(),
-					isArchive: false
-				});
-				
-				await _updates.save();
-				res.status(200).json({
-					message: 'New Subject has been added.'
-				});
-			}
-		}
+			res.status(200).json({
+				message: "Successfuly created a new subject.",
+				details: saveSubject
+			});
+		} catch(e) {
+			res.status(500).json({
+				message: 'Something went wrong.',
+				error: e.message
+			});
+		} 
 	},
 
 	getSubjects: async (req, res) => {
@@ -76,7 +61,9 @@ const SubjectController = {
 				subjects.forEach((subject)=>{
 					newBody.subjects.push({
 						id: subject._id,
+						code: subject.code,
 						name: subject.name,
+						description: subject.description,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
 						isArchive: subject.isArchive

@@ -29,6 +29,7 @@ const DailyTipsController = {
 					_id: new mongoose.Types.ObjectId(),
 					title: req.body.title,
 					description: req.body.description,
+					author: req.body.author,
 					imageUrl: req.body.imageUrl,
 					createdBy: user.firstName + ' ' + user.lastName,
 					isArchive: false
@@ -93,7 +94,7 @@ const DailyTipsController = {
 
 			count = await News.aggregate(query).sort({"createdAt": -1});
 			count = count.length;
-			news = await News.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems).sort({"createdAt": -1});
+			news = await News.aggregate(query).sort({"createdAt": -1}).skip(pageItems*(pageNumber-1)).limit(pageItems);
 			newBody.pageNumber = parseInt(pageNumber);
             newBody.totalPages = Math.ceil(count / pageItems);
             newBody.itemsPerPage = pageItems;
@@ -103,7 +104,8 @@ const DailyTipsController = {
 				newBody.items.push({
 					id: n._id,
 					title: n.title,
-					dsecription: n.description,
+					description: n.description,
+					author: n.author || '',
 					imageUrl: n.imageUrl,
 					createdBy: n.createdBy,
 					createdAt: n.createdAt,
@@ -137,6 +139,7 @@ const DailyTipsController = {
 					id: news._id,
 					title: news.title,
 					description: news.description,
+					author: news.author,
 					imageUrl: news.imageUrl,
 					createdBy: news.createdBy,
 					createdAt: news.createdAt,
@@ -162,6 +165,7 @@ const DailyTipsController = {
 					{ $set: {
 						title: req.body.title,
 						description: req.body.description,
+						author: req.body.author,
 						imageUrl: req.body.imageUrl,
 						updatedAt: Date.now(),
 						isArchive: req.body.isArchive,

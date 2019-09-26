@@ -7,6 +7,7 @@ const config = require('../config');
 
 /* MongoDb Options */
 mongoose.set('useNewUrlParser', true);
+mongoose.set('useUnifiedTopology', true);
 mongoose.set('useCreateIndex', true);
 
 /* MongoDb Atlas*/ 
