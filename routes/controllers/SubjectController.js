@@ -121,7 +121,8 @@ const SubjectController = {
 						description: subject.description,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isArchive: subject.isArchive 
+						isArchive: subject.isArchive,
+						isEnrolled: isEnrolled 
 					});
 				});
 				res.status(200).json({

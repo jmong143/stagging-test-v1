@@ -10,12 +10,14 @@ const User = require('../../models/Users');
 const News = require('../../models/News')
 const Activity = require('../../models/Activity');
 
+const Subject = require('../../models/Subject');
+
 const HomepageController = {
 
 	getHomepage: async (req, res) => {
 
 		let token = req.headers['token'];
-		let decoded, user, profile, subjectCode, recent, news;
+		let decoded, user, profile, subjectCode, recent, news, subjects;
 		// Homepage Get
 		try {
 			decoded = await jwt.verify(token, config.secret);
@@ -24,7 +26,7 @@ const HomepageController = {
 			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
 			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}).limit(9) || [];
 			news = await News.find({isArchive: false}).sort( { updatedAt: -1 } ).limit(9) || [];
-
+			subjects = await Subject.find();
 		} finally {
 			if (!decoded) {
 				res.status(401).json({
@@ -33,6 +35,7 @@ const HomepageController = {
 			} else {
 				let _recent = [];
 				let _news = [];
+				let _subjects = [];
 
 				recent.forEach((rcnt)=>{
 					
@@ -50,7 +53,12 @@ const HomepageController = {
 						date: rcnt.date
 					});
 				});
-
+				subjectCode.subjects.forEach((subject)=> {
+					subjects.forEach((s)=> {
+						if (s.id == subject.subjectId)
+							_subjects.push({s});
+					});
+				});
 				news.forEach((n)=>{
 					_news.push({
 						id: n._id,
@@ -79,7 +87,7 @@ const HomepageController = {
 					},
 					subjects: {
 						subjectCode: subjectCode.subjectCode || '',
-						list: subjectCode.subjects || [],
+						list: _subjects || [], //// ETO YUN
 						activatedAt: subjectCode.activatedAt || '',
 						expiresAt: subjectCode.expiresAt || ''
 					},
