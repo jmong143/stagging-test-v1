@@ -47,8 +47,7 @@ const SubjectController = {
 			decoded = await jwt.verify(token, config.secret);
 			user = await User.findOne({ _id: decoded._id });
 			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode }); 
-			console.log(subjectCode);
-			subjects = await Subject.find({ isArchive: false });
+			subjects = await Subject.find({ isArchive: false }).sort({ createdAt: -1 });
 		} finally {
 			if (!decoded || !user) {
 				res.status(401).json({
@@ -85,11 +84,12 @@ const SubjectController = {
 				subjects.forEach((subject)=>{
 					newBody.subjects.push({
 						id: subject._id,
+						code: subject.code,
 						name: subject.name,
+						description: subject.description,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isEnrolled: false,
-						isArchive: subject.isArchive 
+						isArchive: subject.isArchive
 					});
 				});
 				res.status(200).json({
@@ -116,10 +116,11 @@ const SubjectController = {
 
 					newBody.subjects.push({
 						id: subject._id,
+						code: subject.code,
 						name: subject.name,
+						description: subject.description,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isEnrolled: isEnrolled,
 						isArchive: subject.isArchive 
 					});
 				});
