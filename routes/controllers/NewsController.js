@@ -39,16 +39,22 @@ const DailyTipsController = {
 
 				if(!saveNews) {
 					res.status(500).json({
-						message: 'Something went wrong.'
+						result: 'failed',
+						message: 'Failed to create news.',
+						error: 'Internal server error'
 					});	
 				} else {
 					res.status(200).json({
-						message: 'News has been successfully created.'
+						result: 'success',
+						message: 'News has been successfully created.',
+						data: saveNews
 					});
 				}
 			} else {
 				res.status(500).json({
-					message: 'Something went wrong.'
+					result: 'failed',
+					message: 'Failed to create news.',
+					error: 'Internal server error.'
 				});	
 			}
 		}
@@ -66,7 +72,7 @@ const DailyTipsController = {
 		let pageNumber = 1;
 
 
-		let newBody = {
+		let data = {
 			pageNumber: 0,
 			totalPages: 0,
 			itemsPerPage: 0,
@@ -95,13 +101,13 @@ const DailyTipsController = {
 			count = await News.aggregate(query).sort({"createdAt": -1});
 			count = count.length;
 			news = await News.aggregate(query).sort({"createdAt": -1}).skip(pageItems*(pageNumber-1)).limit(pageItems);
-			newBody.pageNumber = parseInt(pageNumber);
-            newBody.totalPages = Math.ceil(count / pageItems);
-            newBody.itemsPerPage = pageItems;
-            newBody.totalItems = count;
+			data.pageNumber = parseInt(pageNumber);
+            data.totalPages = Math.ceil(count / pageItems);
+            data.itemsPerPage = pageItems;
+            data.totalItems = count;
 
             news.forEach((n) => {
-				newBody.items.push({
+				data.items.push({
 					id: n._id,
 					title: n.title,
 					description: n.description,
@@ -112,10 +118,15 @@ const DailyTipsController = {
 					isArchive: n.isArchive
 				});
 			});
-			res.status(200).json(newBody);
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get list of news',
+				data: data
+			});
 		} catch(e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to get news.',
 				error: e.message
 			});
 		}
@@ -132,35 +143,41 @@ const DailyTipsController = {
 		} finally {
 			if (!news) {
 				res.status(500).json({
-					message: 'Something went wrong.'
+					result: 'failed',
+					message: 'Failed to get news details.'
 				});
 			} else {
 				res.status(200).json({
-					id: news._id,
-					title: news.title,
-					description: news.description,
-					author: news.author,
-					imageUrl: news.imageUrl,
-					createdBy: news.createdBy,
-					createdAt: news.createdAt,
-					updatedAt: news.updatedAt,
-					isArchive: news.isArchive
+					result: 'success',
+					message: 'Successfully get news details',
+					data:{
+						id: news._id,
+						title: news.title,
+						description: news.description,
+						author: news.author,
+						imageUrl: news.imageUrl,
+						createdBy: news.createdBy,
+						createdAt: news.createdAt,
+						updatedAt: news.updatedAt,
+						isArchive: news.isArchive
+					}
 				});
 			}
 		}
 	},
 
 	updateNews: async (req, res) => {
-		let news;
+		let news, updateNews;
 		try {
 			news = await News.findOne({ _id: req.params.newsId });
 		} finally {
 			if(!news) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'News does not exist.'
 				});
 			} else {
-				await News.findOneAndUpdate(
+				updateNews = await News.findOneAndUpdate(
 					{ _id: req.params.newsId},
 					{ $set: {
 						title: req.body.title,
@@ -175,23 +192,26 @@ const DailyTipsController = {
 				);
 
 				res.status(200).json({
-					message: 'News details successfuly updated.'
+					result: 'success',
+					message: 'News details successfuly updated.',
+					data: updateNews
 				});
 			}
 		}
 	},
 
 	archiveNews: async (req, res) => {
-		let news;
+		let news, archiveNews;
 		try {
 			news = await News.findOne({ _id: req.params.newsId });
 		} finally {
 			if(!news) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'News does not exist.'
 				});
 			} else {
-				await News.findOneAndUpdate(
+				archiveNews = await News.findOneAndUpdate(
 					{ _id: req.params.newsId},
 					{ $set: {
 						updatedAt: Date.now(),
@@ -202,7 +222,9 @@ const DailyTipsController = {
 				);
 
 				res.status(200).json({
-					message: 'News details successfuly archived.'
+					result: 'success',
+					message: 'News details successfuly archived.',
+					data: archiveNews
 				});
 			}
 		}

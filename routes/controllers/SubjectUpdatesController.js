@@ -10,7 +10,7 @@ const User = require('../../models/Users');
 
 const SubjectUpdatesController = {
 	getUpdates: async (req,res) => {
-		let updates, decoded, user, subjectCode, newBody;
+		let updates, decoded, user, subjectCode, data;
 		let token = req.headers.token;
 		try {
 			decoded = await jwt.verify(token, config.secret);
@@ -20,14 +20,16 @@ const SubjectUpdatesController = {
 		} finally {
 			if (!decoded || !user) {
 				res.status(401).json({ 
+					result: 'failed',
 					message: 'Unauthorized.' 
 				});	
 			} else if(!updates) {
 				res.status(500).json({
+					result: 'failed',
 					message: 'Something went wrong.'
 				});
 			} else {
-				newBody = [];
+				data = [];
 				let subjectIds = [];
 				subjectCode.subjects.forEach((subject)=>{
 					subjectIds.push(subject.subjectId);
@@ -35,7 +37,7 @@ const SubjectUpdatesController = {
 				
 				updates.forEach((update)=> {
 					if (subjectIds.indexOf(update.subjectId) > -1)
-					newBody.push({
+					data.push({
 						id: update.id,
 						subjectId: update.subjectId,
 						topicId: update.topicId,
@@ -45,7 +47,11 @@ const SubjectUpdatesController = {
 						updatedAt: update.updatedAt
 					});
 				});
-				res.status(200).json(newBody);
+				res.status(200).json({
+					result: 'success',
+					message: 'Successfully get subject updates',
+					data: data
+				});
 			}
 		}
 	}	

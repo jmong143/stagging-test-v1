@@ -56,12 +56,14 @@ const MockController = {
 
 			saveMock = await mock.save();
 			res.status(200).json({
+				result: 'success',
 				message: 'Mock exam successfully created.',
-				details: saveMock
+				data: saveMock
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to create mock Exam.',
 				error: e.message
 			});
 		}
@@ -70,10 +72,15 @@ const MockController = {
 		let mock;
 		try {
 			mock = await Mock.find();
-			res.status(200).json(mock);
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get all mock exams.',
+				data: mock
+			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to get all mock exams.',
 				error: e.message
 			});
 		}
@@ -110,12 +117,14 @@ const MockController = {
 			);
 
 			res.status(200).json({
+				result: 'success',
 				message: 'Mock Exam set has been successfully updated.',
-				details: updateMock
+				data: updateMock
 			});
 		} catch(e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to update mock exam.',
 				errror: e.message
 			});
 		}
@@ -133,10 +142,14 @@ const MockController = {
 			// get questions, exclude solutions and answers
 			questions = await Question.find({_id: { $in: mock.questions }}, {answer: 0, solution: 0});
 			newBody = {
-				subject: subject.name,
-				description: 'Mock Exam',
-				numberOfQuestions: questions.length,
-				questions: questions
+				result: 'success',
+				message: 'Successfully generated Mock Exam.',
+				data: {
+					subject: subject.name,
+					description: 'Mock Exam',
+					numberOfQuestions: questions.length,
+					questions: questions
+				}
 			};
 			res.status(200).json(newBody);
 		} catch (e) {
@@ -190,8 +203,9 @@ const MockController = {
 			saveResult = await result.save();
 
 			res.status(200).json({
+				result: 'success',
 				message: 'Mock Exam successfully submitted and evaluated.',
-				details: {
+				data: {
 					subject: subject.name,
 					numberOfQuestions: saveResult.numberOfQuestions,
 					score: saveResult.score,
@@ -201,7 +215,8 @@ const MockController = {
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to submit mock exam.',
 				error: e.message
 			});
 		}
@@ -214,12 +229,18 @@ const MockController = {
 			decoded = await jwt.verify(token, Config.auth.secret);
 			records = await MockResults.aggregate([{$match: { userId: decoded._id } }]).sort({createdAt: -1});
 			res.status(200).json({
-				total: records.length,
-				records: records
+
+				result: 'success',
+				message: 'Successfully get all mock exam records.',
+				data: {
+					total: records.length,
+					records: records
+				}
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to get mock exam records',
 				error: e.message
 			});
 		}
@@ -236,15 +257,20 @@ const MockController = {
 					{ userId: decoded._id }
 				]});
 			res.status(200).json({
-				subject: record.subjectName,
-				score: record.score,
-				numberOfQuestions: record.numberOfQuestions,
-				percentage: (record.score / record.numberOfQuestions)*100+' %',
-				createdAt: record.createdAt
+				result: 'success',
+				message: 'Successfully get mock exam record details',
+				data: {
+					subject: record.subjectName,
+					score: record.score,
+					numberOfQuestions: record.numberOfQuestions,
+					percentage: (record.score / record.numberOfQuestions)*100+' %',
+					createdAt: record.createdAt
+				}
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to get mock exam record details.',
 				error: e.message
 			});
 		}

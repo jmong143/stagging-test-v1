@@ -32,8 +32,9 @@ const TopicController = {
 
 			saveTopic = await _topic.save();
 			res.status(200).json({
+				result: 'success',
 				message: "Topic Successfully added.",
-				details: {
+				data: {
 					id: saveTopic._id,
 					description: saveTopic.description,
 					subjectId: saveTopic.subjectId,
@@ -44,6 +45,7 @@ const TopicController = {
 			});
 		} catch(e) {
 			res.status(500).json({
+				result: 'failed',
 				message: 'Failed to create new topic',
 				errror: e.message
 			});
@@ -54,7 +56,7 @@ const TopicController = {
 	getTopics: async (req, res) => {
 		let token = req.headers['token'];
 		let subject, topics, user, decoded;
-		let newBody = [];
+		let data = [];
 		let query = { 
 			$and: [
 				{ subjectId: req.params.subjectId },
@@ -75,17 +77,22 @@ const TopicController = {
 
 			if (!decoded) {
 				res.status(401).json({
+					result: 'failed',
 					message: 'Unauthorized'
 				});
 			} else if (!subject) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'Subject does not exist.'
 				});
 			} else if (!topics) {
-				res.status(200).json(newBody);
+				res.status(500).json({
+					result: 'failed',
+					message: 'Failed to get topic'
+				});
 			} else {
 				topics.forEach((topic) => {
-					newBody.push({
+					data.push({
 						id: topic._id,
 						topicNumber: topic.topicNumber,
 						description: topic.description,
@@ -95,7 +102,11 @@ const TopicController = {
 						isArchive: topic.isArchive
 					});
 				});
-				res.status(200).json(newBody);
+				res.status(200).json({
+					result: 'success',
+					message: 'Successfully get list of topics.',
+					data: data
+				});
 			}
 		}
 	},
@@ -115,17 +126,22 @@ const TopicController = {
 		} finally {
 			if (!topic) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'Topic does not exist.'
 				});
 			} else {
 				res.status(200).json({
-					id: topic._id,
-					topicNumber: topic.topicNumber,
-					description: topic.description,
-					subjectId: topic.subjectId,
-					lessons: topic.lessons,
-					createdAt: topic.createdAt,
-					isArchive: topic.isArchive
+					result: 'success',
+					message: 'Successfully get topic details.',
+					data:{
+						id: topic._id,
+						topicNumber: topic.topicNumber,
+						description: topic.description,
+						subjectId: topic.subjectId,
+						lessons: topic.lessons,
+						createdAt: topic.createdAt,
+						isArchive: topic.isArchive
+					}
 				});
 			}
 		}
@@ -156,8 +172,9 @@ const TopicController = {
 			);
 			
 			res.status(200).json({
+				result: 'success',
 				message: 'Topic details successfuly updated.',
-				details: {
+				data: {
 					id: updateTopic._id,
 					description: updateTopic.description,
 					topicNumber: updateTopic.topicNumber,
@@ -171,7 +188,8 @@ const TopicController = {
 
 		} catch(e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to update topic details.',
 				error: e.message
 			})
 		}
@@ -179,7 +197,7 @@ const TopicController = {
 
 	/* Archive topics */
 	archiveTopic: async (req, res)=> {
-		let topic;
+		let topic, updateTopic;
 		try {
 			topic = await Topic.findOne({
 				$and: [
@@ -187,7 +205,7 @@ const TopicController = {
 					{ subjectId: req.params.subjectId}
 				]
 			});
-			await Topic.findOneAndUpdate(
+			updateTopic = await Topic.findOneAndUpdate(
 				{ _id: req.params.topicId},
 				{ $set: {
 					isArchive: true
@@ -196,10 +214,13 @@ const TopicController = {
 			);
 
 			res.status(200).json({
-				message: 'Topic successfuly archived.'
+				result: 'success',
+				message: 'Topic successfuly archived.',
+				data: updateTopic
 			});
 		} catch(e) {
 			res.status(500).json({
+				result: 'failed',
 				message: 'Something went wrong.',
 				error: e.message
 			});

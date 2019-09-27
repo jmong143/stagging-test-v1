@@ -78,10 +78,15 @@ const UserController =  {
 				});
             });
 
-            res.status(200).json(newBody);
+            res.status(200).json({
+            	result: 'success',
+            	message: 'Successfully get user list',
+            	data: newBody
+            });
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to get list of users',
 				error: e.message
 			});
 		}
@@ -98,23 +103,28 @@ const UserController =  {
 				profile = await Profile.findOne({ userId: req.params.userId });
 			}
 			res.status(200).json({
-				id: user._id,
-				firstName: user.firstName,
-				middleName: user.middleName,
-				lastName: user.lastName,
-				email: user.email,
-				birthDate: profile.birthDate || '',
-				gender: profile.gender || '',
-				school: profile.school || '',
-				subjectCode: user.subjectCode || '',
-				updatedAt: user.updatedAt || '',
-				createdAt: user.createdAt || '',
-				isActive: user.isActive || '',
-				isArchive: user.isArchive,
-				isAdmin: user.isAdmin
+				result: 'success',
+				message: 'Successfully get user details.',
+				data:{
+					id: user._id,
+					firstName: user.firstName,
+					middleName: user.middleName,
+					lastName: user.lastName,
+					email: user.email,
+					birthDate: profile.birthDate || '',
+					gender: profile.gender || '',
+					school: profile.school || '',
+					subjectCode: user.subjectCode || '',
+					updatedAt: user.updatedAt || '',
+					createdAt: user.createdAt || '',
+					isActive: user.isActive || '',
+					isArchive: user.isArchive,
+					isAdmin: user.isAdmin
+				}
 			});
 		} catch (e) {
 			res.status(500).json({
+				result: 'failed',
 				message: 'Something went wrong.',
 				error: e.message
 			});
@@ -141,10 +151,12 @@ const UserController =  {
 		} finally {
 			if (!hash) {
 				res.status(500).json({
+					result: 'failed',
 					message: 'Something went wrong.'
 				});
 			} else if (user) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'Email already taken.'
 				});
 			} else if (!user && hash) {
@@ -166,7 +178,8 @@ const UserController =  {
 				saveUser = await _user.save();
 				if (!saveUser) {
 					res.status(500).json({
-						message: 'Something went wrong.'
+						result: 'failed',
+						message: 'User saving failed.'
 					});
 				} else {
 					let mailOptions = {
@@ -179,10 +192,13 @@ const UserController =  {
 					if (sendMail) {
 						console.log('Email has been sent to '+ saveUser.email);
 						res.status(200).json({
-							message: 'New user has been created. An Email has been sent to '+ req.body.email
+							result: 'success',
+							message: 'New user has been created. An Email has been sent to '+ req.body.email,
+							data: saveUser
 						});
 					} else {
 						res.status(500).json({
+							result: 'failed',
 							message: 'Email sending failed.'
 						});
 					}
@@ -199,6 +215,7 @@ const UserController =  {
 		} finally {
 			if (!user) {
 				res.status(200).json({
+					result: 'failed',
 					message: 'User does not exist.'
 				});
 			} else {
@@ -211,7 +228,9 @@ const UserController =  {
 					{ new: true }
 				);				
 				res.status(200).json({
-					message: 'User successfuly archived.'
+					result: 'success',
+					message: 'User successfuly archived.',
+					data: archiveUser
 				});	
 			}		
 		}
@@ -225,6 +244,7 @@ const UserController =  {
 		} finally {
 			if (!user) {
 				res.status(200).json({
+					result: 'failed',
 					message: 'User does not exist.'
 				});
 			} else {
@@ -237,7 +257,9 @@ const UserController =  {
 					{ new: true }
 				);				
 				res.status(200).json({
-					message: 'User account successfuly reactivated.'
+					result: 'success',
+					message: 'User account successfuly reactivated.',
+					data: activateUser
 				});	
 			}		
 		}
@@ -262,8 +284,9 @@ const UserController =  {
 			);
 			console.log(updateUser);
 			res.status(200).json({
+				result: 'success',
 				message: 'User Details successfuly updated.',
-				details: {
+				data: {
 					email: updateUser.email,
 					firstName: updateUser.firstName,
 					middleName: updateUser. middleName,
@@ -274,7 +297,8 @@ const UserController =  {
 			}); 
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to update user details',
 				error: e.message
 			});
 		}

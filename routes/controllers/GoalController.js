@@ -18,11 +18,14 @@ const GoalController = {
         preGoal.save((err, preGoal) => {
             if (err) {
                 res.status(500).json({
+                    result:'failed',
                     message: `insert failed. ${err}`,
                 });
             } else {
                 res.status(200).json({
+                    result: 'success',
                     message: 'New predefined goal has beed added.',
+                    data: preGoal
                 });
             }
         });
@@ -31,19 +34,23 @@ const GoalController = {
         models.PreGoal.find({}, (err, goals) => {
             if(err) {
                 res.status(500).json({
+                    result: 'failed',
                     message: `get records failed. ${err}`
                 });
             } else {
-                let formatResponse = [];
-
-                goals.forEach( goal => formatResponse.push({
+                let newBody = {
+                    result: 'success',
+                    message: 'Successfully get all pre goals',
+                    data: []
+                };
+                goals.forEach( goal => newBody.data.push({
                     id: goal._id,
                     isArchive: goal.isArchive,
                     goalType: goal.goalType,
                     description: goal.description
                 }));
                 
-                res.status(200).json(formatResponse);
+                res.status(200).json(newBody);
             }
         });
     },

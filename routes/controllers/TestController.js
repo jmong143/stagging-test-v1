@@ -21,7 +21,7 @@ const TestController = {
 	generate: async (req, res) => {
 		let questions, numberOfQuestions, topic;
 		numberOfQuestions = questionCount;
-		let newBody= {
+		let data= {
 			total: 0,
 			items: []
 		};
@@ -35,12 +35,17 @@ const TestController = {
 			if (!topic) 
 				throw new Error('Topic not found.')
 			questions = await Question.aggregate([ {$sample: {size: numberOfQuestions}} ]); 
-			newBody.items = questions;
-			newBody.total = questions.length;
-			res.status(200).json(newBody);
+			data.items = questions;
+			data.total = questions.length;
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully generated a test.',
+				data: data
+			});
 		} catch(e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to generate test.',
 				error : e.message
 			});
 		}
@@ -67,20 +72,17 @@ const TestController = {
 
 			saveExam = await examRecord.save();
 			res.status(200).json({
+				result: 'success',
 				message: "Test records successfuly evaluated and saved.",
-				details: saveExam
+				data: saveExam
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to submit exam.',
 				error: e.message
 			});
 		}
-	},
-
-	// Get Results
-	getResult: async (req, res) => {
-
 	}
 }
 

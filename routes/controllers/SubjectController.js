@@ -26,12 +26,14 @@ const SubjectController = {
 			});
 			saveSubject = await _subject.save();
 			res.status(200).json({
+				result: 'success',
 				message: "Successfuly created a new subject.",
-				details: saveSubject
+				data: saveSubject
 			});
 		} catch(e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to create new subject',
 				error: e.message
 			});
 		} 
@@ -49,7 +51,8 @@ const SubjectController = {
 			subjects = await Subject.find({ isArchive: false });
 		} finally {
 			if (!decoded || !user) {
-				res.status(401).json({ 
+				res.status(401).json({
+					result: 'failed', 
 					message: 'Unauthorized.' 
 				});	
 			} else if (!subjectCode && user.isAdmin == true) {
@@ -69,7 +72,11 @@ const SubjectController = {
 						isArchive: subject.isArchive
 					});
 				});
-				res.status(200).json(newBody);
+				res.status(200).json({
+					result: 'success',
+					message: 'Successfully get list of subjects.',
+					data: newBody
+				});
 			} else if (!subjectCode && user.isAdmin == false) {
 				let newBody = {
 					subjects: [],
@@ -85,7 +92,11 @@ const SubjectController = {
 						isArchive: subject.isArchive 
 					});
 				});
-				res.status(200).json(newBody);
+				res.status(200).json({
+					result: 'success',
+					message: 'Successfully get list of subjects.',
+					data: newBody
+				});
 			} else if (subjectCode && user.isAdmin == false) {
 				let subjectIds = [];
 				let newBody = {
@@ -112,7 +123,11 @@ const SubjectController = {
 						isArchive: subject.isArchive 
 					});
 				});
-				res.status(200).json(newBody);
+				res.status(200).json({
+					result: 'success',
+					message: 'Successfully get list of subjects.',
+					data: newBody
+				});
 			}
 		}
 	},
@@ -123,15 +138,22 @@ const SubjectController = {
 		try {
 			subject = await Subject.findOne({ _id: req.params.subjectId });
 			res.status(200).json({
-				id: subject._id,
-				name: subject.name,
-				description: subject.description,
-				imageUrl: subject.imageUrl,
-				createdAt: subject.createdAt
+				result: 'success',
+				message: 'Successfully get subject details.',
+				data: {
+					id: subject._id,
+					code: subject.code,
+					name: subject.name,
+					description: subject.description,
+					imageUrl: subject.imageUrl,
+					createdAt: subject.createdAt,
+					isArchive: subject.isArchive
+				}
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to get subject details.',
 				error: e.message
 			})
 		}
@@ -167,7 +189,11 @@ const SubjectController = {
 						});	
 					}
 				});
-				res.status(200).json(newBody);
+				res.status(200).json({
+					result: 'success',
+					message: 'Successfully get enrollees count',
+					data: newBody
+				});
 			} else {
 				res.status(500).json({
 					message: 'Something went wrong.'
@@ -184,6 +210,7 @@ const SubjectController = {
 			subjectCodes = await SubjectCode.find();
 			let response = {
 				id: subject._id,
+				code: subject.code,
 				name: subject.name,
 				description: subject.description,
 				imageUrl: subject.imageUrl,
@@ -199,10 +226,15 @@ const SubjectController = {
 				});
 			});
 
-			res.status(200).json(response);
+			res.status(200).json({
+				result: 'success',
+				message: 'Succesfully get subject code list',
+				data: response	
+			});
 
 		} catch (e) {
 			res.status(400).json({
+				result: 'failed',
 				message: 'Failed to get subject codes.',
 				error: e.message
 			})
@@ -221,11 +253,14 @@ const SubjectController = {
 			);
 
 			res.status(200).json({
-				message: 'Subject successfuly archived.'
+				result: 'success',
+				message: 'Subject successfuly archived.',
+				data: archiveSubject
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to archive subject.',
 				error: e.message
 			});
 		}
@@ -246,12 +281,14 @@ const SubjectController = {
 				}},
 				{ new: true });
 			res.status(200).json({
+				result: 'success',
 				message: 'Subject details successfully updated.',
-				details: updateSubject
+				data: updateSubject
 			})
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to update subject.',
 				error: e.message
 			});
 		}

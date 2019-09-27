@@ -33,7 +33,11 @@ const ActivityController = {
 
 	getRecentActivities: async (req, res) => {
 		let recentActivity, decoded;
-		let newBody = [];
+		let newBody = {
+			result: "",
+			message: "",
+			data: []
+		};
 		let token = req.headers['token'];
 
 		try {
@@ -47,8 +51,10 @@ const ActivityController = {
 			} else if (!recentActivity){
 				res.status(200).json(newBody);
 			} else if (recentActivity){
+				newBody.result = "success",
+				newBody.message = "Successfully get recent activities."
 				await recentActivity.forEach((activity)=> {
-					newBody.push({
+					newBody.data.push({
 						id: activity._id,
 						details: activity.details,
 						date: activity.date

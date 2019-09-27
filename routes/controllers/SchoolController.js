@@ -22,16 +22,17 @@ const SchoolController = {
 
 		try {
 			saveSchools = await School.insertMany(docs);
-		} finally {
-			if (!saveSchools) {
-				res.status(500).json({
-					message: 'Something went Wrong.'
-				});
-			} else {
-				res.status(200).json({
-					message: 'Schools successfully added.'
-				});
-			}
+			res.status(200).json({
+				result: 'success',
+				message: 'Schools successfully added.',
+				data: saveSchools
+			});
+		} catch (e) {
+			res.status(200).json({
+				result: 'failed',
+				message: 'Failed to add schools.',
+				error : e.message
+			});
 		}
 	},
 
@@ -42,6 +43,7 @@ const SchoolController = {
 		} finally {
 			if (!school) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'School does not exist.'
 				});
 			} else {
@@ -55,11 +57,14 @@ const SchoolController = {
 				);
 				if (!updateSchool) {
 					res.status(500).json({
-						message: 'Something went wrong.'
+						result: 'failed',
+						message: 'Failed to update school.'
 					});
 				} else {
 					res.status(200).json({
-						message: 'School details successfully updated.'
+						result: 'success',
+						message: 'School details successfully updated.',
+						data: updateSchool
 					});
 				}
 			}
@@ -73,12 +78,17 @@ const SchoolController = {
 		} finally {
 			if(!schools) {
 				res.status(500).json({
-					message: 'Something went wrong'
+					result: 'failed',
+					message: 'Failed to get list of schools'
 				});
 			} else {
-				let newBody = [];
+				let newBody = {
+					result: 'success',
+					message: 'successfully get list of schools.',
+					data: []
+				};
 				schools.forEach((school)=> {
-					newBody.push({
+					newBody.data.push({
 						_id: school.id,
 						name: school.name,
 						isArchive: school.isArchive

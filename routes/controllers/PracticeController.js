@@ -18,10 +18,15 @@ const PracticeController = {
 		let practiceControls;
 		try {
 			practiceControls = await PracticeControl.find();
-			res.status(200).json(practiceControls);
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get all practice controls',
+				data: practiceControls
+			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to get practice controls',
 				error: e.message
 			});
 		}
@@ -53,12 +58,14 @@ const PracticeController = {
 			saveControls = await controls.save();
 
 			res.status(200).json({
+				result: 'success',
 				message: 'New Practice Controls has been save.',
-				details: saveControls
+				data: saveControls
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to create practice controls',
 				error: e.message
 			});
 		}
@@ -81,13 +88,15 @@ const PracticeController = {
 				}},
 				{ $new: true });
 			res.status(200).json({
+				result: 'success',
 				message: 'Practice controls exam successfully updated.',
-				practice: updatePracticeControls
+				data: updatePracticeControls
 			});
 
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to update practice controls',
 				errror: e.message
 			});
 		}
@@ -101,11 +110,14 @@ const PracticeController = {
 				throw new Error('Practice Control not found.')
 			deletePracticeControls = await PracticeControl.findOneAndDelete({ _id: req.params.id });
 			res.status(200).json({
+				result: 'success',
 				message: 'Practice Controls has been successfully deleted.',
+				data: deletePracticeControls
 			})
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to delete practice controls',
 				error: e.message
 			});
 		}
@@ -130,9 +142,14 @@ const PracticeController = {
 			questions = await Question.aggregate([{ $sample: {size: numberOfQuestions} }]);
 			practice.size = questions.length;
 			practice.items = questions;
-			res.status(200).json(practice);
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully generated practice exam',
+				data: practice
+			});
 		} catch (e) {
 			res.status(500).json({
+				result: 'failed',
 				message: 'Something went wrong.',
 				error: e.message
 			});

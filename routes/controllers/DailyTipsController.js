@@ -8,21 +8,24 @@ const DailyTipsController = {
 
 	createDailyTips: async (req, res) => {
 		// Create new daily tip
-		const _dailyTips = new DailyTips ({
+		let _dailyTips = new DailyTips ({
 			_id: new mongoose.Types.ObjectId(),
 			tip: req.body.tip
 		});
 
 		try {
-			const saveDailyTips = await _dailyTips.save();
+			let saveDailyTips = await _dailyTips.save();
 			if (saveDailyTips) {
 				res.status(200).json({
-					message: 'New Daily Tips has been added.'
+					result: "success",
+					message: 'New Daily Tips has been added.',
+					data: saveDailyTips
 				});	
 			}
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: "failed",
+				message: 'Error creating daily tips',
 				error: e.message
 			});
 		}
@@ -34,12 +37,14 @@ const DailyTipsController = {
 			const tips = await DailyTips.find({});
 
 			let newBody = {
-				tips: [],
+				result: "success",
+				message: "Successfully get all daily tips.",
+				data: [],
 				total: tips.length
 			};
 			
 			tips.forEach((tip)=>{
-				newBody.tips.push({
+				newBody.data.push({
 					id: tip._id,
 					tip: tip.tip,
 					isArchive: tip.isArchive
@@ -48,6 +53,7 @@ const DailyTipsController = {
 			res.status(200).json(newBody);
 		} catch (e) {
 			res.status(500).json({
+				result: "failed",
 				message: 'Daily Tips not Found.',
 				error: e.message
 			});
@@ -63,8 +69,12 @@ const DailyTipsController = {
 			]);
 
 			let newBody = {
-				id: tip[0]._id,
-				tip: tip[0].tip
+				result: "success",
+				message: `Successfully get ${tip[0].id}`,
+				data: {
+					id: tip[0]._id,
+					tip: tip[0].tip
+				}
 			};
 
 			res.status(200).json(newBody);
@@ -88,17 +98,21 @@ const DailyTipsController = {
 
 			if (!result) {
 				res.status(400).json({
-					message: "Daily tip does not exist."
+					result: 'failed',
+					message: `Daily tip ${req.params.dailyTipsId} does not exist.`
 				});
 
 			} else {
 				res.status(200).json({
-					message: 'Daily Tip has been successfuly updated.'
+					result: 'success',
+					message: 'Daily Tip has been successfuly updated.',
+					data: result
 				});
 			}
 
 		} catch (e) {
 			res.status(400).json({
+				result: 'failed',
 				message: 'Daily tip does not exist.',
 				error: e.message
 			});
@@ -116,17 +130,21 @@ const DailyTipsController = {
 
 			if (!result) {
 				res.status(500).json({
+					result: 'failed',
 					message: "Daily tip does not exist."
 				});
 			} else {
 				res.status(200).json({
-					message: 'Daily Tip has been successfuly archived.'
+					result: 'success',
+					message: 'Daily Tip has been successfuly archived.',
+					data: result
 				});
 			}
 
 		} catch (e) {
 
 			res.status(400).json({
+				result: 'failed',
 				message: 'Daily tip does not exist.',
 				error: e.message
 			});

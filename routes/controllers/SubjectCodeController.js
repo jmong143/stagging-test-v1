@@ -128,8 +128,9 @@ const SubjectController = {
 
 			// Response
 			res.status(200).json({
+				result: 'success',
 				message: 'Subject Code(s) has been successfully generated and has been sent to '+email,
-				details: {
+				data: {
 					organizationName: saveSubjectCodes[0].organizationName,
 					createdAt: saveSubjectCodes[0].createdAt,
 					codes: savedIds
@@ -137,6 +138,7 @@ const SubjectController = {
 			});
 		} catch (e) {
 			res.status(500).json({
+				result: 'failed',
 				message: 'Failed to generate subject code.',
 				error: e.message
 			});
@@ -163,7 +165,7 @@ const SubjectController = {
 		let pageItems = parseInt(config.pagination.defaultItemsPerPage);
 		let pageNumber = 1;
 
-		let newBody = {
+		let data = {
 			pageNumber: 0,
 			totalPages: 0,
 			itemsPerPage: 0,
@@ -184,13 +186,13 @@ const SubjectController = {
 			count = await SubjectCode.aggregate(query);
 			count = count.length;
 			subjectCodes = await SubjectCode.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems);
-			newBody.pageNumber = parseInt(pageNumber);
-            newBody.totalPages = Math.ceil(count / pageItems);
-            newBody.itemsPerPage = pageItems;
-            newBody.totalItems = count;
+			data.pageNumber = parseInt(pageNumber);
+            data.totalPages = Math.ceil(count / pageItems);
+            data.itemsPerPage = pageItems;
+            data.totalItems = count;
 
             subjectCodes.forEach((code)=>{
-            	newBody.items.push({
+            	data.items.push({
 					id: code._id,
 					subjectCode: code.subjectCode,
 					userId: code.userId || '',
@@ -199,10 +201,15 @@ const SubjectController = {
 				});
             });
 
-            res.status(200).json(newBody);
+            res.status(200).json({
+            	result: 'success',
+            	message: 'Successfully get subject codes list.',
+            	data: data
+            });
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'success',
+				message: 'Failed to get list of subject codes.',
 				error: e.message
 			})
 		}
@@ -215,18 +222,23 @@ const SubjectController = {
 		} finally {
 			if(!subjectCode) {
 				res.status(400).json({
+					result: 'failed',
 					message: 'Subject code does not exist.'
 				});
 			} else {
 				res.status(200).json({
-					id: subjectCode._id,
-					subjectCode: subjectCode.subjectCode,
-					userId: subjectCode.userId || '',
-					organizationName: subjectCode.organizationName,
-					createdAt: subjectCode.createdAt,
-					activatedAt: subjectCode.activatedAt || '',
-					expiresAt: subjectCode.expiresAt || '',
-					subjects: subjectCode.subjects
+					result : 'success',
+					message: 'Successfully get subject code details.',
+					data: {
+						id: subjectCode._id,
+						subjectCode: subjectCode.subjectCode,
+						userId: subjectCode.userId || '',
+						organizationName: subjectCode.organizationName,
+						createdAt: subjectCode.createdAt,
+						activatedAt: subjectCode.activatedAt || '',
+						expiresAt: subjectCode.expiresAt || '',
+						subjects: subjectCode.subjects
+					}
 				});
 			}
 		}
@@ -242,21 +254,27 @@ const SubjectController = {
 		} finally {
 			if (!decoded || !user) {
 				res.status(401).json({ 
+					result: 'failed',
 					message: 'Unauthorized.' 
 				});		
 			} else if (!subjectCode) {
 				res.status(400).json({ 
+					result: 'failed',
 					message: 'You are currently unsubscribed. Please activate a subject code.' 
 				});	
 			} else {
 				newBody = {
-					id: subjectCode._id,
-					subjectCode: subjectCode.subjectCode,
-					userId: subjectCode.userId,
-					subjects: subjectCode.subjects,
-					createdAt: subjectCode.createdAt,
-					activatedAt: subjectCode.activatedAt,
-					expiresAt: subjectCode.expiresAt					
+					result: 'success',
+					message: 'Successfully get subscription details.',
+					data: {
+						id: subjectCode._id,
+						subjectCode: subjectCode.subjectCode,
+						userId: subjectCode.userId,
+						subjects: subjectCode.subjects,
+						createdAt: subjectCode.createdAt,
+						activatedAt: subjectCode.activatedAt,
+						expiresAt: subjectCode.expiresAt					
+					}
 				};
 				res.status(200).json(newBody);
 			}	
@@ -276,21 +294,25 @@ const SubjectController = {
 			// Validate User
 			if (!user || !decoded) {
 				res.status(401).json({ 
+					result: 'failed',
 					message: 'Unauthorized.' 
 				});	
 			// Validate if user has a subject code
 			} else if (user.subjectCode) {
 				res.status(400).json({ 
+					result: 'failed',
 					message: 'You already have a subject code.' 
 				});
 			// Validate if subject code exists
 			} else if (!subjectCode) {
-				res.status(400).json({ 
+				res.status(400).json({
+					result: 'failed', 
 					message: 'Subject code does not exist.' 
 				});
 			// Validate if subject code is already used
 			} else if (subjectCode.userId) {
 				res.status(400).json({ 
+					result: 'failed',
 					message: 'Subject code already used.' 
 				});
 			// Activate Subject Code
@@ -313,8 +335,9 @@ const SubjectController = {
 				// Validate if successful
 				if (userResult && subjectCodeResult) {
 					res.status(200).json({
+						result: 'success',
 						message: 'Subject Code has been activated.',
-						details: {
+						data: {
 							activatedBy: decoded.email,
 							subjectCode: userResult.subjectCode,
 							activatedAt: subjectCodeResult.activatedAt,
@@ -355,10 +378,12 @@ const SubjectController = {
 		} finally {
 			if(!user) {
 				res.status(400).json({ 
+					result: 'failed',
 					message: 'Email address is not yet enrolled.' 
 				});
 			} else if (!subjectCode) {
 				res.status(400).json({ 
+					result: 'failed',
 					message: 'Subject code does not exist.' 
 				});
 			} else {
@@ -371,10 +396,12 @@ const SubjectController = {
 				sendMail = await transporter.sendMail(mailOptions);
 				if (!sendMail) {
 					res.status(500).json({
+						result: 'failed',
 						message: 'Email sending failed. Please try again.'+ req.body.email
 					});
 				} else {
 					res.status(200).json({
+						result: 'success',
 						message: 'Subject code has been sent to '+ req.body.email
 					});
 					console.log('Email has been sent to '+ user.email);				
@@ -400,10 +427,12 @@ const SubjectController = {
 			resendEmail = await transporter.sendMail(mailOptions);
 
 			res.status(200).json({
+				result: 'success',
 				message: 'Email has been sent to '+ email
 			});
 		} catch (e) {
 			res.status(500).json({
+				result: 'failed',
 				message: 'Failed to resend email.',
 				error: e.message
 			});
@@ -429,7 +458,7 @@ const SubjectController = {
 		let pageItems = parseInt(config.pagination.defaultItemsPerPage);
 		let pageNumber = 1;
 
-		let newBody = {
+		let data = {
 			pageNumber: 0,
 			totalPages: 0,
 			itemsPerPage: 0,
@@ -449,12 +478,12 @@ const SubjectController = {
 			count = await SubjectCodesSent.aggregate(query);
 			count = count.length
 			sentCodes = await SubjectCodesSent.aggregate(query).skip(pageItems*(pageNumber-1)).limit(pageItems);;
-			newBody.pageNumber = parseInt(pageNumber);
-            newBody.totalPages = Math.ceil(count / pageItems);
-            newBody.itemsPerPage = pageItems;
-            newBody.totalItems = count;
+			data.pageNumber = parseInt(pageNumber);
+            data.totalPages = Math.ceil(count / pageItems);
+            data.itemsPerPage = pageItems;
+            data.totalItems = count;
             sentCodes.forEach((code)=> {
-            	newBody.items.push({
+            	data.items.push({
             		id: code._id,
             		to: code.to,
             		subject: code.subject,
@@ -464,10 +493,15 @@ const SubjectController = {
             	});
             });
 
-			res.status(200).json(newBody);
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get list of sent subject codes',
+				data: data
+			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: 'failed',
+				message: 'Failed to get list of sent subject codes.',
 				error: e.message
 			});
 		}

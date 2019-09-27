@@ -10,7 +10,7 @@ const Topic = require('../../models/Topic');
 
 const choicesCount = parseInt(Config.questions.choicesCount);
 
-const ActivityController = {
+const QuestionController = {
 	
 	addQuestion: async (req, res) => {
 		let question, saveQuestion;
@@ -41,12 +41,14 @@ const ActivityController = {
 			saveQuestion = await question.save();
 
 			res.status(200).json({
+				result: 'success',
 				message: 'New Question has been addded.',
-				question: saveQuestion
+				data: saveQuestion
 			})
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to create new question.',
 				error: e.message
 			})
 		}
@@ -71,7 +73,11 @@ const ActivityController = {
 
 		try {
 			questions = await Question.aggregate(query);
-			res.status(200).json(questions);
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get list of questions.',
+				data: questions
+			});
 		} catch (e) {
 			res.status(500).json({
 				message: 'Something went wrong',
@@ -108,12 +114,14 @@ const ActivityController = {
 			);
 
 			res.status(200).json({
+				result: 'success',
 				message: 'Question successfuly updated.',
-				details: updateQuestion
+				data: updateQuestion
 			})
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to update question',
 				error: e.message
 			})
 		}
@@ -132,11 +140,14 @@ const ActivityController = {
 			);
 
 			res.status(200).json({
-				message: 'Question has been successfuly archived.'
+				result: 'success',
+				message: 'Question has been successfuly archived.',
+				data: question
 			}); 
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to delete question '+ req.params.questionId,
 				error: e.message
 			});
 		}
@@ -144,4 +155,4 @@ const ActivityController = {
 }
 
 
-module.exports = ActivityController;
+module.exports = QuestionController;

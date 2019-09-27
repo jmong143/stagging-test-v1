@@ -16,6 +16,5 @@ router.use('*', SessionController.validateApp);
 /* Front and Admin Endpoints */
 router.get('/topics/:topicId/generate', TestController.generate);
 router.post('/submit', TestController.submit);
-router.get('/:testId', TestController.getResult);
 
 module.exports = router;
