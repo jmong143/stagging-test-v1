@@ -23,7 +23,7 @@ const HomepageController = {
 			decoded = await jwt.verify(token, config.secret);
 			user = await User.findOne({ _id: decoded._id });
 			profile = await Profile.findOne({ userId: decoded._id}) || {};
-			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
+			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode}) || {};
 			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}).limit(9) || [];
 			news = await News.find({isArchive: false}).sort( { updatedAt: -1 } ).limit(9) || [];
 			subjects = await Subject.find();
@@ -55,8 +55,15 @@ const HomepageController = {
 				});
 				subjectCode.subjects.forEach((subject)=> {
 					subjects.forEach((s)=> {
-						if (s.id == subject.subjectId)
-							_subjects.push({s});
+						if (s.id == subject.subjectId){
+							_subjects.push({
+								id: s._id,
+								code: s.code,
+								name: s.name,
+								imageUrl: s.imageUrl,
+								createdAt: s.createdAt
+							});
+						}
 					});
 				});
 				news.forEach((n)=>{
