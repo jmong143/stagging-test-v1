@@ -139,7 +139,7 @@ const PracticeController = {
 			topic = await Topic.findOne({ _id: req.params.topicId });
 			if(!topic)
 				throw new Error('Topic not found.');
-			questions = await Question.aggregate([{ $sample: {size: numberOfQuestions} }]);
+			questions = await Question.aggregate([{ $match: {isArchive: false }},{ $sample: {size: numberOfQuestions} }]);
 			practice.size = questions.length;
 			practice.items = questions;
 			res.status(200).json({
