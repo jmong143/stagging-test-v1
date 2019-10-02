@@ -86,8 +86,7 @@ const ProfileController = {
 				res.status(200).json({
 					message: 'Profile has been created.'
 				});
-			}
-			
+			}	
 		}
 	},	
 }

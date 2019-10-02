@@ -95,12 +95,12 @@ const UserController =  {
 
 	getUser: async (req, res) => {
 
-		let user, profile;
+		let user, profile = {};
 
 		try {
 			user = await User.findOne({ _id: req.params.userId });
 			if (user.isAdmin === false) {
-				profile = await Profile.findOne({ userId: req.params.userId });
+				profile = await Profile.findOne({ userId: req.params.userId }) || {};
 			}
 			res.status(200).json({
 				result: 'success',
@@ -267,22 +267,47 @@ const UserController =  {
 
 	updateUser: async (req, res) => {
 		// update user detials
-		let user, updateUser;
+		let user, updateUser, updateProfile, hash;
 		try {
 			user = await User.findOne({ _id: req.params.userId });
+
+			let userBody = {
+				updatedAt: Date.now()
+			};
+
+			req.body.email ? userBody.email = req.body.email : '';
+			req.body.firstName ? userBody.firstName = req.body.firstName : '';
+			req.body.middleName ? userBody.middleName = req.body.middleName : '';
+			req.body.lastName ? userBody.lastName = req.body.lastName : '';
+			req.body.subjectCode ? userBody.subjectCode = req.body.subjectCode : '';
+
+			// If Change Password:
+			if (req.body.password) {
+				hash = await bcrypt.hash(req.body.password,10);
+				userBody.password = hash
+			}
+
+
+			let profileBody = {
+				updatedAt: Date.now()
+			}
+
+			req.body.birthDate ? profileBody.birthDate = req.body.birthDate : '';
+			req.body.gender ? profileBody.gender = req.body.gender : '';
+			req.body.school ? profileBody.school = req.body.school : '';
+
 			updateUser = await User.findOneAndUpdate(
 				{ _id : user._id },
-				{ $set: {
-					email: req.body.email,
-					firstName: req.body.firstName,
-					middleName: req.body.middleName,
-					lastName: req.body.lastName,
-					subjectCode: req.body.subjectCode,
-					updatedAt: Date.now()
-				}},
+				{ $set: userBody },
 				{ new: true }
 			);
-			console.log(updateUser);
+
+			updateProfile = await Profile.findOneAndUpdate(
+				{ userId: req.params.userId },
+				{ $set: profileBody },
+				{ new: true}
+			);
+
 			res.status(200).json({
 				result: 'success',
 				message: 'User Details successfuly updated.',
@@ -292,6 +317,9 @@ const UserController =  {
 					middleName: updateUser. middleName,
 					lastName: updateUser.lastName,
 					subjectCode: updateUser.subjectCode,
+					birthDate: updateProfile.birthDate || '',
+					gender: updateProfile.gender || '',
+					school: updateProfile.school || '',
 					updatedAt: updateUser.updatedAt
 				}
 			}); 
