@@ -88,7 +88,7 @@ const HomepageController = {
 						email: user.email,
 						firstName: user.firstName,
 						lastName: user.lastName,
-						age: profile.age || '',
+						birthDate: profile.birthDate || '',
 						gender: profile.gender || '',
 						school: profile.school || '',
 						updatedAt: profile.updatedAt || '',
