@@ -167,37 +167,30 @@ const DailyTipsController = {
 	},
 
 	updateNews: async (req, res) => {
-		let news, updateNews;
+		let news, updateNews, newsBody;
 		try {
 			news = await News.findOne({ _id: req.params.newsId });
-		} finally {
-			if(!news) {
-				res.status(400).json({
-					result: 'failed',
-					message: 'News does not exist.'
-				});
-			} else {
-				updateNews = await News.findOneAndUpdate(
-					{ _id: req.params.newsId},
-					{ $set: {
-						title: req.body.title,
-						description: req.body.description,
-						author: req.body.author,
-						imageUrl: req.body.imageUrl,
-						updatedAt: Date.now(),
-						isArchive: req.body.isArchive,
+			newsBody = req.body;
+			newsBody.updatedAt = Date.now();
 
-					}},
-					{ new: true }
-				);
+			updateNews = await News.findOneAndUpdate(
+				{ _id: req.params.newsId},
+				{ $set: newsBody },
+				{ new: true }
+			);
 
-				res.status(200).json({
-					result: 'success',
-					message: 'News details successfuly updated.',
-					data: updateNews
-				});
-			}
-		}
+			res.status(200).json({
+				result: 'success',
+				message: 'News details successfuly updated.',
+				data: updateNews
+			});
+		} catch(e) {
+			res.status(400).json({
+				result: 'failed',
+				message: 'Failed to update news details',
+				error: e.mesage
+			});
+		} 
 	},
 
 	archiveNews: async (req, res) => {

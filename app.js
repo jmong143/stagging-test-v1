@@ -9,25 +9,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
 
-/* Routes */
-const user = require('./routes/users');
-const auth = require('./routes/auth');
-const profile = require('./routes/profile');
-const subjects = require('./routes/subject');
-const dailyTips = require('./routes/dailyTips');
-const subjectCode = require('./routes/subjectCode');
-const homepage = require('./routes/homepage');
-const news = require('./routes/news');
-const activity = require('./routes/activity');
-const subscription = require('./routes/subscription');
-const subjectUpdates = require('./routes/subjectUpdates');
-const schools = require('./routes/school');
-const uploads = require('./routes/uploads');
-const question = require('./routes/question');
-const practice = require('./routes/practice');
-const test = require('./routes/test');
-const mock = require('./routes/mock');
-
 const app = express();
 
 /* Services */
@@ -46,24 +27,25 @@ let dbConnection = false;
 const connection = db.connection;
 
 /* Use Routes */
-app.use('/users', user);
-app.use('/auth', auth);
-app.use('/profile', profile);
-app.use('/subjects', subjects);
-app.use('/tips', dailyTips);
-app.use('/admin/subjects/codes', subjectCode);
-app.use('/home', homepage);
-app.use('/news', news);
-app.use('/activities', activity);
-app.use('/subscriptions', subscription);
-app.use('/updates', subjectUpdates);
-app.use('/schools', schools);
-app.use('/uploads', uploads);
-app.use('/questions', question);
-app.use('/practice', practice);
-app.use('/test', test);
+app.use('/users', require('./routes/users'));
+app.use('/auth', require('./routes/auth'));
+app.use('/profile', require('./routes/profile'));
+app.use('/subjects', require('./routes/subject'));
+app.use('/tips', require('./routes/dailyTips'));
+app.use('/admin/subjects/codes', require('./routes/subjectCode'));
+app.use('/home', require('./routes/homepage'));
+app.use('/news', require('./routes/news'));
+app.use('/activities', require('./routes/activity'));
+app.use('/subscriptions', require('./routes/subscription'));
+app.use('/updates', require('./routes/subjectUpdates'));
+app.use('/schools', require('./routes/school'));
+app.use('/uploads', require('./routes/uploads'));
+app.use('/questions', require('./routes/question'));
+app.use('/practice', require('./routes/practice'));
+app.use('/test', require('./routes/test'));
 app.use('/goals', require('./routes/goal'));
-app.use('/mock', mock);
+app.use('/mock', require('./routes/mock'));
+app.use('/progress', require('./routes/progress'));
 
 /* API Status*/
 app.get('/status', function(req, res){

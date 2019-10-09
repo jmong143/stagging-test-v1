@@ -274,14 +274,12 @@ const SubjectController = {
 			subject = await Subject.findOne({ _id: req.params.id });
 			updateSubject = await Subject.findOneAndUpdate(
 				{ _id: req.params.subjectId },
-				{ $set: {
-					code: req.body.code,
-					name: req.body.name,
-					description: req.body.description,
-					imageUrl: req.body.imageUrl,
-					isArchive: req.body.isArchive
-				}},
+				{ $set: req.body },
 				{ new: true });
+			if(!updateSubject && !subject)
+				throw new Error('Subject doesnt exist.');
+			console.log(subject);
+
 			res.status(200).json({
 				result: 'success',
 				message: 'Subject details successfully updated.',

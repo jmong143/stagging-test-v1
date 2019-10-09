@@ -49,10 +49,7 @@ const SchoolController = {
 			} else {
 				updateSchool = await School.findOneAndUpdate(
 					{ _id: req.params.schoolId },
-					{ $set: {
-						name: req.body.name,
-						isArchive: req.body.isArchive
-					}},
+					{ $set: req.body },
 					{ new: true }
 				);
 				if (!updateSchool) {

@@ -150,7 +150,7 @@ const TopicController = {
 
 	/* Update Topic */
 	updateTopic: async (req, res) => {
-		let topic, updateTopic, subject;
+		let topic, updateTopic, subject, topicBody;
 		try {
 			topic = await Topic.findOne({
 				$and: [
@@ -159,31 +159,18 @@ const TopicController = {
 				]
 			});
 			subject = await Subject.findOne({ _id: topic.subjectId });
+			topicBody = req.body;
+			topicBody.updatedAt = Date.now()
 			updateTopic = await Topic.findOneAndUpdate(
 				{ _id: req.params.topicId},
-				{ $set: {
-					description: req.body.description,
-					topicNumber: req.body.topicNumber,
-					lessons: req.body.lessons,
-					isArchive: req.body.isArchive,
-					updatedAt: Date.now()
-				}},
+				{ $set: topicBody },
 				{ new: true }
 			);
 			
 			res.status(200).json({
 				result: 'success',
 				message: 'Topic details successfuly updated.',
-				data: {
-					id: updateTopic._id,
-					description: updateTopic.description,
-					topicNumber: updateTopic.topicNumber,
-					subjectId: updateTopic.subjectId,
-					lessons: updateTopic.lessons,
-					createdAt: updateTopic.createdAt,
-					updatedAt: updateTopic.updatedAt,
-					isArchive: updateTopic.isArchive
-				}
+				data: updateTopic
 			});
 
 		} catch(e) {

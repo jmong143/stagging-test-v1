@@ -81,7 +81,8 @@ const DailyTipsController = {
 
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong.',
+				result: "Failed",
+				message: 'Failed to Get Daily Tips',
 				error: e.message
 			});
 		}
