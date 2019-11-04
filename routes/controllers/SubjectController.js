@@ -9,13 +9,14 @@ const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');
 const config = require('../../config').auth; 
 const SubjectUpdates = require('../../models/SubjectUpdates');
-
+const AuditTrail = require('./AuditTrailController');
+const tag = 'Subjects'
 const SubjectController = {
 
 	createSubject: async (req, res) => {
 		// Create new Subject
 		let saveSubject, saveUpdate;
-
+		const action = 'Create Subject';
 		try {
 			const _subject = new Subject ({
 				_id: new mongoose.Types.ObjectId(),
@@ -30,6 +31,15 @@ const SubjectController = {
 				message: "Successfuly created a new subject.",
 				data: saveSubject
 			});
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					subject: saveSubject.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch(e) {
 			res.status(500).json({
 				result: 'failed',
@@ -244,6 +254,7 @@ const SubjectController = {
 	},
 
 	archiveSubject: async (req, res) => {
+		const action = 'Archive Subject'
 		let archiveSubject;
 		try {
 			archiveSubject = await Subject.findOneAndUpdate(
@@ -259,6 +270,16 @@ const SubjectController = {
 				message: 'Subject successfuly archived.',
 				data: archiveSubject
 			});
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					subject: archiveSubject.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch (e) {
 			res.status(500).json({
 				result: 'failed',
@@ -270,6 +291,7 @@ const SubjectController = {
 
 	updateSubject: async (req, res) => {
 		let subject, updateSubject;
+		const action = 'Update Subject';
 		try {
 			subject = await Subject.findOne({ _id: req.params.id });
 			updateSubject = await Subject.findOneAndUpdate(
@@ -278,13 +300,22 @@ const SubjectController = {
 				{ new: true });
 			if(!updateSubject && !subject)
 				throw new Error('Subject doesnt exist.');
-			console.log(subject);
 
 			res.status(200).json({
 				result: 'success',
 				message: 'Subject details successfully updated.',
 				data: updateSubject
-			})
+			});
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					subject: updateSubject.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch (e) {
 			res.status(500).json({
 				result: 'failed',

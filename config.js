@@ -32,7 +32,9 @@ const Config = {
 	},
 	pagination: {
 		defaultItemsPerPage: process.env.PAGINATION_DEFAULT
-	}
+	},
+	superAdminCount: process.env.SUPER_ADMIN_COUNT,
+	superAdminPassword: process.env.SUPER_ADMIN_PASSWORD
 }
 
 module.exports = Config;

@@ -7,13 +7,16 @@ const config = require('../../config');
 const News = require('../../models/News');
 const User = require('../../models/Users');
 
+const AuditTrail = require('./AuditTrailController');
+const tag = 'News';
+
 const DailyTipsController = {
 
 	createNews: async (req, res) => {
 		// Create News
 		let token = req.headers['token'];
 		let user, news, decoded, saveNews;
-
+		const action = 'Create News';
 		try {
 
 			decoded = await jwt.verify(token, config.auth.secret);
@@ -44,6 +47,17 @@ const DailyTipsController = {
 						error: 'Internal server error'
 					});	
 				} else {
+
+					let log = {
+						module: tag,
+						action: action,
+						details: {
+							news: saveNews.title
+						}
+					};
+
+					AuditTrail.addAuditTrail(log, req.headers.token);
+
 					res.status(200).json({
 						result: 'success',
 						message: 'News has been successfully created.',
@@ -168,6 +182,7 @@ const DailyTipsController = {
 
 	updateNews: async (req, res) => {
 		let news, updateNews, newsBody;
+		const action = 'Update News';
 		try {
 			news = await News.findOne({ _id: req.params.newsId });
 			newsBody = req.body;
@@ -178,6 +193,16 @@ const DailyTipsController = {
 				{ $set: newsBody },
 				{ new: true }
 			);
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					news: news.title
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
 
 			res.status(200).json({
 				result: 'success',
@@ -195,6 +220,7 @@ const DailyTipsController = {
 
 	archiveNews: async (req, res) => {
 		let news, archiveNews;
+		const action = 'Archive News';
 		try {
 			news = await News.findOne({ _id: req.params.newsId });
 		} finally {
@@ -213,7 +239,16 @@ const DailyTipsController = {
 					}},
 					{ new: true }
 				);
+				let log = {
+					module: tag,
+					action: action,
+					details: {
+						news: news.title
+					}
+				};
 
+				AuditTrail.addAuditTrail(log, req.headers.token);
+				
 				res.status(200).json({
 					result: 'success',
 					message: 'News details successfuly archived.',

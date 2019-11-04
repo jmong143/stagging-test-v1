@@ -9,6 +9,7 @@ const user = mongoose.Schema({
    lastName: { type: String, required: true },
    subjectCode: { type: String, default: "" },
    isAdmin: {type: Boolean, required: true },
+   isSuperAdmin: {type: Boolean, required: true, default: false },
    createdAt: { type: Date },
    updatedAt: { type: Date },
    isActive: {type: Boolean, default: true},

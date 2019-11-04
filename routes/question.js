@@ -11,6 +11,7 @@ router.use('*', SessionController.validateApp, SessionController.validateAdminTo
 /* News Management - Admin */
 router.post('/', QuestionController.addQuestion);
 router.get('/', QuestionController.getQuestions);
+router.get('/:questionId', QuestionController.getQuestion);
 router.put('/:questionId', QuestionController.updateQuestion);
 router.delete('/:questionId', QuestionController.deleteQuestion);
 

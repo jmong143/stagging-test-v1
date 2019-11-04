@@ -11,7 +11,7 @@ const ActivityController = require('./ActivityController');
 const Subject = require('../../models/Subject');
 const SubjectCode = require('../../models/SubjectCode');
 const SubjectCodesSent = require('../../models/SubjectCodesSent');
-
+const AuditTrail = require('./AuditTrailController');
 const tag = 'Subscription';
 
 
@@ -29,7 +29,7 @@ const transporter = nodemailer.createTransport({
 const SubjectController = {
 
 	generateSubjectCode: async (req, res) => {
-
+		const action = 'Generate Subject Code';
 		let _subjects = [];
 		let subjects;
 		let list = {};
@@ -80,6 +80,7 @@ const SubjectController = {
 					_id: new mongoose.Types.ObjectId(),
 					subjectCode: subjectCode,
 					subjects: _subjects,
+					email: email,
 					organizationName: organizationName,
 					createdAt: Date.now()
 				});
@@ -136,6 +137,14 @@ const SubjectController = {
 					codes: savedIds
 				}
 			});
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch (e) {
 			res.status(500).json({
 				result: 'failed',
@@ -197,6 +206,7 @@ const SubjectController = {
 					subjectCode: code.subjectCode,
 					userId: code.userId || '',
 					subjects: code.subjects,
+					email: code.email || '',
 					organizationName: code.organizationName || '',
 				});
             });
@@ -234,6 +244,7 @@ const SubjectController = {
 						subjectCode: subjectCode.subjectCode,
 						userId: subjectCode.userId || '',
 						organizationName: subjectCode.organizationName,
+						email: subjectCode.email || '',
 						createdAt: subjectCode.createdAt,
 						activatedAt: subjectCode.activatedAt || '',
 						expiresAt: subjectCode.expiresAt || '',
@@ -270,6 +281,7 @@ const SubjectController = {
 						id: subjectCode._id,
 						subjectCode: subjectCode.subjectCode,
 						userId: subjectCode.userId,
+						email: subjectCode.email || user.email || '',
 						subjects: subjectCode.subjects,
 						createdAt: subjectCode.createdAt,
 						activatedAt: subjectCode.activatedAt,
@@ -376,12 +388,7 @@ const SubjectController = {
 			subjectCode = await SubjectCode.findOne({ subjectCode: req.body.subjectCode});
 			user = await User.findOne({ email: req.body.email});
 		} finally {
-			if(!user) {
-				res.status(400).json({ 
-					result: 'failed',
-					message: 'Email address is not yet enrolled.' 
-				});
-			} else if (!subjectCode) {
+			if (!subjectCode) {
 				res.status(400).json({ 
 					result: 'failed',
 					message: 'Subject code does not exist.' 
@@ -505,6 +512,53 @@ const SubjectController = {
 				error: e.message
 			});
 		}
+	},
+
+	updateSubjectCode: async (req, res, next) => {
+		let subjectCode, updateSubjectCode;
+		const action = 'Update Subject Code'
+		try {
+			subjectCode = await SubjectCode.findOne({ _id: req.params.subjectCodeId });
+			updateSubjectCode = await SubjectCode.findOneAndUpdate(
+				{ _id: subjectCode._id },
+				{ $set: req.body },
+				{ new: true }
+			);
+
+			// Email sending
+
+			if(subjectCode.email) {
+				let mailOptions = {
+					from: `Pinnacle Review School <${config.mail.auth.user}>`,  
+					to: subjectCode.email,
+					subject: 'Pinnacle App Updated Subject Code',
+					html: '<p>Hello, we would like to inform you that your purchased subject <strong>'+ updateSubjectCode.subjectCode + '</strong> code was updated by the administrator.<br><br>'+
+					'Please check the updates using the mobile or web app.<br></p>'
+				};
+
+				let sendMail = await transporter.sendMail(mailOptions);
+			}
+			
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully updated subject code details',
+				data: updateSubjectCode
+			});
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to update subject codes',
+				error: e.message
+			});
+		} 
 	}
 }
 

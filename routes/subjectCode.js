@@ -12,7 +12,8 @@ router.use('*', SessionController.validateApp, SessionController.validateAdminTo
 router.post('/generate', SubjectCodeController.generateSubjectCode);
 router.get('/', SubjectCodeController.getSubjectCodes);
 router.get('/:subjectCodeId', SubjectCodeController.getSubjectCode);
-//router.post('/send', SubjectCodeController.sendSubjectCode);
+router.put('/:subjectCodeId', SubjectCodeController.updateSubjectCode);
+router.post('/send', SubjectCodeController.sendSubjectCode);
 
 /* Getting And Resending Subject COdes */
 router.get('/mail/sent', SubjectCodeController.getSentSubjectCodes);

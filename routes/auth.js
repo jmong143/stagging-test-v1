@@ -25,6 +25,7 @@ router.get('/sessions/validate', SessionController.validateToken, function (req 
 router.post('/admin/login', AuthController.adminLogin);
 router.post('/admin/register', SessionController.validateAdminToken, AuthController.adminRegister);
 router.post('/admin/password/change', SessionController.validateAdminToken, AuthController.changePassword);
+router.post('/admin/password/validate', SessionController.validateAdminToken, AuthController.validateAdminPassword);
 router.get('/admin/sessions/validate', SessionController.validateAdminToken, function (req, res) {
 	res.status(200).json({
 		auth: true,

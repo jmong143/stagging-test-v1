@@ -79,8 +79,8 @@ const ProgressController = {
 	},
 
 
-	/* Front */
-	getOverallProgress: async (req, res,next) => {
+	/* Front Mock Progress*/
+	getOverallMockProgress: async (req, res,next) => {
 		let token = req.headers['token'];
 		let user, subjectCode, subjects, mocks, progress;
 		let tmpSubjects = [];
@@ -147,6 +147,108 @@ const ProgressController = {
 		}
 
 	},
+	
+	getMockProgressBySubject: async (req, res, next) => {
+		let token = req.headers['token'];
+		let user, subjectCode, progress, subject;
+
+		try {
+			decoded = await jwt.verify(token, config.auth.secret);
+			user = await User.findOne({ _id: decoded._id });
+			subject = await Subject.findOne({ _id: req.params.subjectId });
+			mocks = await MockRecords.find({ userId: user._id,  subjectId: subject._id });
+
+			let totalMockScore = 0;
+			let totalNumberOfQuestions = 0;
+
+			mocks.forEach((mock) => {
+				totalMockScore += mock.score;
+				totalNumberOfQuestions += mock.numberOfQuestions;
+			});
+
+			let response = {
+				subjectId: subject._id,
+				code: subject.code,
+				name: subject.name,
+				grade: (totalMockScore / totalNumberOfQuestions) * 100 || 0,
+				mockAttemps: mocks.length,
+				records: mocks
+			};
+			res.status(200).json({
+				result: 'success',
+				message: `Successfully get mock exam progress on subject ${subject.name}`,
+				data: response
+			})
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to get mock exam progress',
+				error: e.message
+			});
+		} 
+	},
+
+	/* Test Progress */
+	getOverallTestProgress: async (req, res, next) => {
+		let token = req.headers['token'];
+		let user, subjectCode, topics, tests, progress, subject;
+
+		try {
+			decoded = await jwt.verify(token, config.auth.secret);
+			user = await User.findOne({ _id: decoded._id });
+			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode}) || { subjects: [] };
+			testRecords = await TestRecords.find({ userId: user._id });
+
+			let _subjects = [];
+			let _totalAttempts = 0;
+			let _totalScore = 0;
+			let _totalNumberOfQuestions = 0;
+			let gwa = 0;
+
+			subjectCode.subjects.forEach((subject) => {
+				let attempts = 0;
+				let totalScore = 0;
+				let totalNumberOfQuestions = 0;
+
+				testRecords.forEach((record) => {
+					if(record.subjectId == subject.subjectId) {
+						attempts++ ;
+						totalScore += record.score;
+						totalNumberOfQuestions += record.numberOfQuestions;
+					}
+				});
+
+				_subjects.push({
+					subjectId: subject.subjectId,
+					name: subject.name,
+					totalScore: totalScore,
+					attempts: attempts,
+					totalNumberQuestions: totalNumberOfQuestions,
+					average: totalScore / totalNumberOfQuestions * 100 || 0
+				});
+
+				_totalAttempts += attempts;
+				_totalScore += totalScore;
+				_totalNumberOfQuestions += totalNumberOfQuestions;
+
+			});
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get overall test progress.',
+				data: {
+					average: _totalScore / _totalNumberOfQuestions * 100 || 0,
+					subjects: _subjects
+				}
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to get overall test progress.',
+				error: e.message
+			});
+		}
+
+	},
 
 	getProgressBySubject: async (req, res, next) => {
 		let token = req.headers['token'];
@@ -177,13 +279,14 @@ const ProgressController = {
 
 				tmpTopics.push({
 					topicId: topic._id,
+					description: topic.description,
 					topicNumber: topic.topicNumber,
 					attempts: topicExamRecords,
 					totalScore: topicExamScore,
 					totalNumberQuestions: totalNumberQuestions,
-					average: topicExamScore / totalNumberQuestions
+					average: 100* topicExamScore / totalNumberQuestions || 0
 				});
-				ave += topicExamScore / totalNumberQuestions;
+				ave += topicExamScore / totalNumberQuestions || 0;
 			});
 
 			// compute for grade

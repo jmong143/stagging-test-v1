@@ -46,6 +46,8 @@ app.use('/test', require('./routes/test'));
 app.use('/goals', require('./routes/goal'));
 app.use('/mock', require('./routes/mock'));
 app.use('/progress', require('./routes/progress'));
+app.use('/topics', require('./routes/lesson'));
+app.use('/audit/trail', require('./routes/auditTrail'));
 
 /* API Status*/
 app.get('/status', function(req, res){
@@ -71,3 +73,27 @@ app.use('*', (req, res)=> {
 app.listen(config.server.port, function(){
    console.log('[API] '+config.server.appname + ' Server is running on Port', config.server.port);
 });
+
+
+
+/* Swagger Docs Attempt */
+// var route, routes = [];
+
+
+// app._router.stack.forEach(function(middleware){
+//    let str = middleware.regexp.toString()
+//       .replace(/\\\//g, '/')
+//       .replace(/\/\^/g, '')
+//       .replace();
+//    console.log(str);
+//     if(middleware.route){ // routes registered directly on the app
+//         routes.push(middleware.route);
+//     } else if(middleware.name === 'router'){ // router middleware 
+//         middleware.handle.stack.forEach(function(handler){
+//             route = handler.route;
+//             route && routes.push(route);
+//         });
+//     }
+// });
+
+// console.log(routes);

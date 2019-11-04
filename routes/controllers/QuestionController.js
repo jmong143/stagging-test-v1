@@ -10,22 +10,30 @@ const Topic = require('../../models/Topic');
 
 const choicesCount = parseInt(Config.questions.choicesCount);
 
+const AuditTrail = require('./AuditTrailController');
+const tag = 'Questions';
+
 const QuestionController = {
 	
 	addQuestion: async (req, res) => {
 		let question, saveQuestion;
-
+		const action = 'Create Question';
 		try {
-			if (req.body.choices.length !== choicesCount) {
+
+			let choices = req.body.choices || [];
+			let answer = req.body.answer || '';
+
+			if ( choices && choices.length !== choicesCount) {
 				throw new Error('Question must have four (4) choices.');
 			}
 
-			if (req.body.choices.indexOf(req.body.answer) < 0) {
+			if (choices && choices.indexOf(answer) < 0) {
 				throw new Error('Answer must be one of the choices.');
 			}
 
 			question = new Question({
 				_id: new mongoose.Types.ObjectId(),
+				tag: req.body.tag,
 				question: req.body.name,
 				solution: req.body.solution,
 				choices: req.body.choices,
@@ -39,6 +47,16 @@ const QuestionController = {
 			});
 
 			saveQuestion = await question.save();
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					lesson: saveQuestion.tag
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
 
 			res.status(200).json({
 				result: 'success',
@@ -80,38 +98,67 @@ const QuestionController = {
 			});
 		} catch (e) {
 			res.status(500).json({
-				message: 'Something went wrong',
+				result: 'failed',
+				message: 'Failed to get list of questions',
+				error: e.message
+			});
+		}
+	},
+
+	getQuestion: async (req,res) => {
+		let question;
+
+		try {
+			question = await Question.findOne({ _id: req.params.questionId });
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get question Details.',
+				data: question
+			});
+		} catch (e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to get question details',
 				error: e.message
 			});
 		}
 	},
 
 	updateQuestion: async (req,res) => {
-		let question, updateQuestion;
+		let question, updateQuestion, questionBody;
+		const action = 'Update Question';
 		try {
-			if (req.body.choices.length !== choicesCount) {
+
+			question = await Question.findOne({ _id: req.params.questionId });
+			let choices = req.body.choices || question.choices;
+			let answer = req.body.answer || question.answer;
+	
+			if (choices && choices.length !== choicesCount) {
 				throw new Error('Question must have four (4) choices.');
 			}
 
-			if (req.body.choices.indexOf(req.body.answer) < 0) {
+			if (answer && question.choices.indexOf(answer) < 0 ) {
 				throw new Error('Answer must be one of the choices.');
 			}
+			
+			questionBody = req.body;
+			questionBody.updatedAt = Date.now();
 
 			updateQuestion = await Question.findOneAndUpdate(
 				{ _id: req.params.questionId},
-				{ $set: {
-					question: req.body.question,
-					solution: req.body.solution,
-					choices: req.body.choices,
-					answer: req.body.answer,
-					subjectId: req.body.subjectId,
-					topicId: req.body.topicId,
-					resourceUrl: req.body.resourceUrl,
-					isArchive: req.body.isArchive,
-					updatedAt: Date.now()
-				}},
+				{ $set: questionBody },
 				{ new: true }
 			);
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					lesson: question.tag
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
 
 			res.status(200).json({
 				result: 'success',
@@ -129,15 +176,27 @@ const QuestionController = {
 
 	deleteQuestion: async (req,res) => {
 		let question, _deleteQuestion;
-		
+		const action = 'Archive Question';
 		try {
+			_question = await Question.findOne({ _id: req.params.questionId });
 			question = await Question.findOneAndUpdate(
-				{ _id: req.params.questionId},
+				{ _id: _question._id },
 				{ $set: {
 					isArchive: true
 				}},
 				{ new: true}
 			);
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					lesson: _question.tag
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
+
 
 			res.status(200).json({
 				result: 'success',

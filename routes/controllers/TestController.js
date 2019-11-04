@@ -14,7 +14,11 @@ const bcrypt = require('bcrypt');
 
 const Config = require('../../config');
 
+const ActivityController = require('./ActivityController');
+
 const questionCount = parseInt(Config.questions.testCount);
+
+const tag = 'Test'
 
 const TestController = {
 	// generate test
@@ -59,18 +63,30 @@ const TestController = {
 			// Get User Details
 			decoded = await jwt.verify(token, Config.auth.secret);
 			user = await User.findOne({ _id: decoded._id});
+			topic = await Topic.findOne({ _id: req.body.topicId });
+			subject = await Subject.findOne({ _id: topic.subjectId });
 			// console.log(user);
 			// Save Exam Records
 			examRecord = new ExamRecords({
 				_id: new mongoose.Types.ObjectId(),
 				userId: user._id,
 				topicId: req.body.topicId,
+				subjectId: subject._id,
 				numberOfQuestions: req.body.numberOfQuestions,
 				score: req.body.score,
 				createdAt: Date.now()
 			});
 
 			saveExam = await examRecord.save();
+			
+			let details = {
+				module: tag,
+				subject: subject.name,
+				topic: topic.description
+			};
+
+			ActivityController.addActivity(details, decoded._id);
+
 			res.status(200).json({
 				result: 'success',
 				message: "Test records successfuly evaluated and saved.",

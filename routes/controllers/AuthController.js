@@ -314,6 +314,32 @@ const AuthController = {
 				}
 			}
 		}
+	},
+	validateAdminPassword: async (req, res, next) => {
+		let clientSecret = req.headers['x-client-secret'];
+		let user, hash, decoded;
+		let token = req.headers.token;
+		
+		try {
+			decoded = await jwt.verify(token, config.auth.secret);
+			user = await User.findOne({ _id: decoded._id });
+			hash = await bcrypt.compare(req.body.password, user.password);
+
+			if (!hash)
+				throw new Error('Incorrect password.')
+			
+			res.status(200).json({
+				result: 'success',
+				message: 'Admin password succesfully verified.',
+				data: true
+			});
+		} catch (e) {
+			res.status(400).json({
+				result: 'failed',
+				message: e.message,
+				data: false
+			});
+		}
 	}
 }
 

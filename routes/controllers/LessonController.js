@@ -1,240 +1,193 @@
-/* Dependencies */  
+/* Dependencies */
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const config = require('../../config').auth; 
 
-/* Models */ 
-const Lesson = require('../../models/Lesson');
+/* Models */
 const Topic = require('../../models/Topic');
-const User = require('../../models/Users');
-const Subject = require('../../models/Subject');
-const ActivityController = require('./ActivityController');
-const SubjectUpdates = require('../../models/SubjectUpdates');
+const Lesson = require('../../models/Lesson');
 
+const AuditTrail = require('./AuditTrailController');
 const tag = 'Lessons';
 
 const LessonController = {
-
-	createLesson: async (req, res) => {
-		let topic, subject, lesson, lessonCount, saveLesson;
+	createLesson: async (req, res, next) => {
+		let lesson, saveLesson, topic, updateTopic, topicLessons;
+		const action = 'Create Lesson'
+			
 		try {
-			topic = await Topic.findOne( { _id: req.params.topicId } );
-			lessonCount = await Lesson.count( { topicId: req.params.topicId } );
-			subject = await Subject.findOne( { _id: topic.subjectId });
-		} finally {
-			if(!topic) {
-				res.status(400).json({
-					message: 'Topic does not exist.'
-				});
-			} else {
-				lesson = new Lesson ({
-					_id: new mongoose.Types.ObjectId(),
-					topicId: req.params.topicId,
-					lessonNumber: lessonCount + 1 ,
-					description: req.body.description,
-					isArchive: false
-				});
-
-				saveLesson = await lesson.save();
-				if (saveLesson) {
-					let _updates = new SubjectUpdates ({
-						_id: new mongoose.Types.ObjectId(),
-						subjectId: topic.subjectId,
-						topicId: saveLesson.topicId,
-						lessonId: saveLesson.id,
-						description: 'New Lesson Added.',
-						name: subject.name +' Topic No. '+ topic.topicNumber + ', Lesson No. '+ saveLesson.lessonNumber,
-						updatedAt: Date.now()
-					});
-					
-					await _updates.save();
-					res.status(200).json({
-						message: 'New Lesson has been added.'
-					});
-				} else {
-					res.status(500).json({
-						message: 'Something went wrong.'
-					});
-				}
-				
-			}
-		}
-	},
-
-	getLessons: async (req, res) => {
-		let token = req.headers['token'];
-		let lessons, user, decoded, topic;
-		let newBody = [];
-		let query = {
-			$and: [
-				{ topicId: req.params.topicId }
-			]};
-		try {
-			decoded = await jwt.verify(token, config.secret);
-			user = await User.findOne( { _id: decoded._id } );
-			// Show only unarchived lessons on non-admin users
-			if (user.isAdmin === false) {
-				query.$and.push( { isArchive: false } );
-			}
-			topic = await Topic.findOne( { _id: req.params.topicId } );
-			lessons = await Lesson.find(query).sort({"lessonNumber": 1});
-		} finally {
-			if (!decoded) {
-				res.status(401).json({
-					message: 'Unauthorized.'
-				});
-			} else if (!topic) {
-				res.status(400).json({
-					message: 'Topic Does Not Exist.'
-				});
-			} else if (!lessons) {
-				res.status(200).json(newBody);
-			} else {
-				lessons.forEach((lesson) => {
-					newBody.push({
-						id: lesson._id,
-						lessonNumber: lesson.lessonNumber,
-						description: lesson.description,
-						isArchive: lesson.isArchive
-					});
-				});
-				res.status(200).json(newBody);
-			}
-		}
-	},
-
-	getLesson: async (req, res) => {
-		let lesson, decoded, _recentActivity, topic, subject;
-		let token = req.headers['token'];
-		try {
-			lesson = await Lesson.findOne({
-				$and: [
-					{ _id: req.params.lessonId },
-					{ topicId: req.params.topicId }
-				]
+			topic = await Topic.findOne({ _id: req.params.topicId });
+			lesson = new Lesson({
+				_id: new mongoose.Types.ObjectId(),
+				name: req.body.name,
+				content: req.body.content,
+				topicId: req.params.topicId,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				isArchive: false
 			});
 
-			decoded = await jwt.verify(token, config.secret);
-			topic = await Topic.findOne( { _id: req.params.topicId } );
-			subject = await Subject.findOne( { _id: topic.subjectId } );
+			saveLesson = await lesson.save();
+			/* Update Topic */
+			topicLessons = topic.lessons;
+			topicLessons.push(saveLesson._id);
+			updateTopic = await Topic.findOneAndUpdate(
+				{ _id: topic._id },
+				{ $set: { lessons: topicLessons } },
+				{ new: true });
 
-		} finally {
-			if (!lesson) {
-				res.status(400).json({
-					message: 'Lesson does not exist.'
-				});
-			} else if (!decoded) {
-				res.status(401).json({
-					message: 'Unauthorized.'
-				});
-			} else {
-				res.status(200).json({
-					id: lesson._id,
-					lessonNumber: lesson.lessonNumber,
-					description: lesson.description,
-					subjectId: lesson.subjectId,
-					isArchive: lesson.isArchive
-				});
-
-				let details = {
-					module: tag,
-					subject: subject.name,
-					topicId: topic._id,
-					topicNumber: topic.topicNumber,
-					lessonId: lesson._id,
-					lessonNumber: lesson.lessonNumber,
-				};
-				ActivityController.addActivity(details, decoded._id);
-			}
-		}
-	
-	},
-
-	updateLesson: async (req, res) => {
-		// Update Lesson
-		let lesson, updateLesson, topic;
-		try {
-			lesson = await Lesson.findOne({
-				$and: [
-					{ _id: req.params.lessonId },
-					{ topicId: req.params.topicId }
-				]
-			});
-			topic = await Topic.findOne( { _id: req.params.topicId } );
-			subject = await Subject.findOne( { _id: topic.subjectId } );
-		} finally {
-
-			if (!lesson) {
-				res.status(400).json({
-					message: 'Lesson does not exist.'
-				});
-			} else {
-				updateLesson = await Lesson.findOneAndUpdate(
-					{ _id: req.params.lessonId },
-					{ $set: {
-						description: req.body.description,
-						lessonNumber: req.body.lessonNumber,
-						isArchive: req.body.isArchive
-					}},
-					{ new: true }
-				);
-
-				if (updateLesson) {
-
-					let _updates = new SubjectUpdates ({
-						_id: new mongoose.Types.ObjectId(),
-						subjectId: topic.subjectId,
-						topicId: updateLesson.topicId,
-						lessonId: updateLesson.id,
-						description: 'Updated Lesson.',
-						name: subject.name +' Topic No. '+ topic.topicNumber + ', Lesson No. '+ updateLesson.lessonNumber,
-						updatedAt: Date.now()
-					});
-					
-					await _updates.save();
-
-					res.status(200).json({
-						message: 'Lesson details successfuly updated.'
-					});
-				} else {
-					res.status(500).json({
-						message: 'Something went wrong'
-					});
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					lesson: saveLesson.name
 				}
-			}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
+
+			res.status(200).json({
+				result: 'success',
+				message: `Successfully created new lesson for ${topic.description}`,
+				data: saveLesson
+			});
+		} catch (e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to create new lesson.',
+				error: e.message
+			});
 		}
 	},
 
-	archiveLesson: async (req, res) => {
-		// Archive Lesson
+	getLessons: async (req, res, next) => {
+		let lessons;
+
+		try {
+			topic = await Topic.findOne({ _id: req.params.topicId})
+			lessons = await Lesson.find({ topicId: topic._id });
+
+			res.status(200).json({
+				result: 'success',
+				message: `Successfully get lessons for topic ${topic.description}`,
+				data: lessons
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to get lessons.',
+				error: e.message
+			});
+		} 
+	},
+
+	getLesson: async (req, res, next) => {
 		let lesson;
+
 		try {
-			lesson = await Lesson.findOne({
-				$and: [
-					{ _id: req.params.lessonId },
-					{ topicId: req.params.topicId }
-				]
+			topic = await Topic.findOne({ _id: req.params.topicId });
+			lesson = await Lesson.findOne({ _id: req.params.lessonId });
+
+			res.status(200).json({
+				result: 'success',
+				message: 'succesfully get lesson details.',
+				data: lesson
 			});
-		} finally {
-			if (!lesson) {
-				res.status(400).json({
-					message: 'Lesson does not exist.'
-				});
-			} else {
-				await Lesson.findOneAndUpdate(
-					{ _id: req.params.lessonId },
-					{ $set: {
-						isArchive: true
-					}},
+
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to get lesson details',
+				error: e.message
+			});
+		}
+	},
+
+	updateLesson: async (req, res, next) => {
+		let lesson, topic, updateLesson;
+		const action = 'Update Lesson';
+		try {
+			topic = await Topic.findOne({ id: req.params.topicId });
+			lesson = await Lesson.findOne({ _id: req.params.lessonId });
+			req.body.updatedAt = Date.now();
+			updateLesson = await Lesson.findOneAndUpdate(
+				{ _id: lesson._id },
+				{ $set: req.body },
+				{ new: true }
+			);
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					lesson: updateLesson.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
+			
+			res.status(200).json({
+				result: 'success',
+				message: 'succesfully updated lesson details.',
+				data: updateLesson
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to update lesson details',
+				error: e.message
+			});
+		} 
+
+	},
+
+	archiveLesson: async (req, res, next) => {
+		const action = 'Archive Lesson';
+		let lesson, topic, archiveLesson, topicLessons, updateLesson;
+		try {
+			topic = await Topic.findOne({ _id: req.params.topicId });
+			lesson = await Lesson.findOne({ _id: req.params.lessonId });
+
+			topicLessons = topic.lessons;
+			let index = topicLessons.indexOf(lesson._id);
+			index > -1 ? topicLessons.splice(index, 1) : null ;
+			req.body.updatedAt = Date.now();
+			archiveLesson = await Lesson.findOneAndUpdate(
+				{ _id: lesson._id },
+				{ $set: { isArchive: true }},
+				{ new: true}
+			).then( async ()=>{
+				await Topic.findOneAndUpdate(
+					{ _id: topic.id },
+					{ $set: { lessons: topicLessons } },
 					{ new: true }
 				);
+			});
 
-				res.status(200).json({
-					message: 'Lesson details successfuly archived.'
-				});
-			}
-		}
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					lesson: lesson.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
+			
+
+			res.status(200).json({
+				result: 'success',
+				message: 'succesfully archived lesson',
+				data: archiveLesson
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to archive lesson',
+				error: e.message
+			});
+		} 
 	}
-}
+};
 
 module.exports = LessonController;

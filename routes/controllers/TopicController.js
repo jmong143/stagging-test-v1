@@ -8,12 +8,16 @@ const Topic = require('../../models/Topic');
 const Subject = require('../../models/Subject');
 const User = require('../../models/Users');
 const SubjectUpdates = require('../../models/SubjectUpdates');
+const Question = require('../../models/Question');
+
+const AuditTrail = require('./AuditTrailController');
+const tag = 'Topics';
 
 const TopicController = {
 
 	/* Create new Topic */
 	createTopic: async (req, res) => {
-
+		const action = 'Create Topic';
 		let subject, topicCount, _topic, saveTopic;
 
 		try {
@@ -25,7 +29,7 @@ const TopicController = {
 				description: req.body.description,
 				topicNumber: topicCount + 1 ,
 				subjectId: req.params.subjectId,
-				lessons: req.body.lessons,
+				lessons: [],
 				createdAt: Date.now(),
 				isArchive: false
 			});
@@ -43,6 +47,16 @@ const TopicController = {
 					isArchive: saveTopic.isArchive
 				}
 			});
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					topic: saveTopic.description
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch(e) {
 			res.status(500).json({
 				result: 'failed',
@@ -55,7 +69,7 @@ const TopicController = {
 	/* Get All Topics on a subject */
 	getTopics: async (req, res) => {
 		let token = req.headers['token'];
-		let subject, topics, user, decoded;
+		let subject, topics, user, decoded, questions;
 		let data = [];
 		let query = { 
 			$and: [
@@ -73,6 +87,7 @@ const TopicController = {
 
 			subject = await Subject.findOne( { _id: req.params.subjectId } );
 			topics = await Topic.find(query);
+			questions = await Question.find().distinct('topicId');
 		} finally {
 
 			if (!decoded) {
@@ -92,9 +107,11 @@ const TopicController = {
 				});
 			} else {
 				topics.forEach((topic) => {
+					let hasQuestions = questions.indexOf(topic.id) != -1 ?  true : false;
 					data.push({
 						id: topic._id,
 						topicNumber: topic.topicNumber,
+						hasQuestions: hasQuestions,
 						description: topic.description,
 						subjectId: topic.subjectId,
 						lessons: topic.lessons,
@@ -150,12 +167,13 @@ const TopicController = {
 
 	/* Update Topic */
 	updateTopic: async (req, res) => {
+		const action = 'Update Topic';
 		let topic, updateTopic, subject, topicBody;
 		try {
 			topic = await Topic.findOne({
 				$and: [
-					{ _id: req.params.topicId},
-					{ subjectId: req.params.subjectId}
+					{ _id: req.params.topicId },
+					{ subjectId: req.params.subjectId }
 				]
 			});
 			subject = await Subject.findOne({ _id: topic.subjectId });
@@ -173,6 +191,15 @@ const TopicController = {
 				data: updateTopic
 			});
 
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					topic: updateTopic.description
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch(e) {
 			res.status(500).json({
 				result: 'failed',
@@ -184,6 +211,7 @@ const TopicController = {
 
 	/* Archive topics */
 	archiveTopic: async (req, res)=> {
+		const action = 'Archive Topic';
 		let topic, updateTopic;
 		try {
 			topic = await Topic.findOne({
@@ -200,11 +228,21 @@ const TopicController = {
 				{ new: true }
 			);
 
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					topic: updateTopic.description
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 			res.status(200).json({
 				result: 'success',
 				message: 'Topic successfuly archived.',
 				data: updateTopic
 			});
+
 		} catch(e) {
 			res.status(500).json({
 				result: 'failed',

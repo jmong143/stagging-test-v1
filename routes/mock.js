@@ -11,6 +11,7 @@ router.use('*', SessionController.validateApp);
 /* Mock Management - Admin */
 router.post('/', SessionController.validateAdminToken, MockController.createMock);
 router.get('/', SessionController.validateAdminToken, MockController.getMock);
+router.get('/subjects/:subjectId', SessionController.validateAdminToken, MockController.getMockDetails);
 router.put('/:mockId', SessionController.validateAdminToken, MockController.updateMock);
 
 /* Front and Admin Endpoints */

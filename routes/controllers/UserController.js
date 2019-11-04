@@ -10,6 +10,11 @@ const config = require('../../config');
 const User = require('../../models/Users');
 const Profile = require('../../models/Profile');
 
+/* Controllers */
+const AuditTrail = require('./AuditTrailController');
+
+const tag = 'User Management';
+
 const UserController =  {
 
 	getUsers: async (req, res) => {
@@ -74,6 +79,7 @@ const UserController =  {
 					updatedAt: user.updatedAt,
 					isArchive: user.isArchive,
 					isAdmin: user.isAdmin,
+					isSuperAdmin: user.isSuperAdmin || false,
 					isActive: user.isActive
 				});
             });
@@ -119,7 +125,8 @@ const UserController =  {
 					createdAt: user.createdAt || '',
 					isActive: user.isActive || '',
 					isArchive: user.isArchive,
-					isAdmin: user.isAdmin
+					isAdmin: user.isAdmin,
+					isSuperAdmin: user.isSuperAdmin || false
 				}
 			});
 		} catch (e) {
@@ -132,6 +139,7 @@ const UserController =  {
 	},
 
 	createUser: async (req, res) => {
+		const action = 'Create User';
 		let _password = Math.random().toString(36).substr(2, 10).toUpperCase();
 		let hash, user, saveUser, sendMail;
 
@@ -171,6 +179,7 @@ const UserController =  {
 					isArchive: false,
 					isActive: true,
 					isAdmin: req.body.isAdmin || false,
+					isSuperAdmin: false,
 					createdAt: Date.now(),
 					updatedAt: Date.now()					
 				});
@@ -196,6 +205,15 @@ const UserController =  {
 							message: 'New user has been created. An Email has been sent to '+ req.body.email,
 							data: saveUser
 						});
+						let log = {
+							module: tag,
+							action: action,
+							details: {
+								email: saveUser.email
+							}
+						};
+						AuditTrail.addAuditTrail(log, req.headers.token);
+
 					} else {
 						res.status(500).json({
 							result: 'failed',
@@ -209,6 +227,7 @@ const UserController =  {
 
 	deleteUser: async (req, res) => {
 		// Deactivate User (Archive)
+		const action = 'Archive User';
 		let user, archiveUser;
 		try {
 			user = await User.findOne({_id: req.params.userId});
@@ -232,6 +251,16 @@ const UserController =  {
 					message: 'User successfuly archived.',
 					data: archiveUser
 				});	
+
+				let log = {
+					module: tag,
+					action: action,
+					details: {
+						email: archiveUser.email
+					}
+				};
+
+				AuditTrail.addAuditTrail(log, req.headers.token);
 			}		
 		}
 	},
@@ -239,6 +268,7 @@ const UserController =  {
 	reactivateUser: async (req,res) => {
 		// Re activate User account (Unarchive)
 		let user, activateUser;
+		const action = 'Reactivate User';
 		try {
 			user = await User.findOne({_id: req.params.userId});
 		} finally {
@@ -261,15 +291,27 @@ const UserController =  {
 					message: 'User account successfuly reactivated.',
 					data: activateUser
 				});	
+
+				let log = {
+					module: tag,
+					action: action,
+					details: {
+						email: activateUser.email
+					}
+				};
+
+				AuditTrail.addAuditTrail(log, req.headers.token);
 			}		
 		}
 	},
 
 	updateUser: async (req, res) => {
 		// update user detials
-		let user, updateUser, updateProfile, hash;
+		const action = 'Update User';
+		let user, updateUser, updateProfile, hash, profile;
 		try {
 			user = await User.findOne({ _id: req.params.userId });
+			profile = await Profile.findOne({ userId: user._id });
 
 			let userBody = {
 				updatedAt: Date.now()
@@ -302,11 +344,22 @@ const UserController =  {
 				{ new: true }
 			);
 
-			updateProfile = await Profile.findOneAndUpdate(
-				{ userId: req.params.userId },
-				{ $set: profileBody },
-				{ new: true}
-			);
+			if(profile) {
+				updateProfile = await Profile.findOneAndUpdate(
+					{ userId: req.params.userId },
+					{ $set: profileBody },
+					{ new: true}
+				);	
+			} else {
+				!req.body.birthDate ? profileBody.birthDate = Date.now() : '';
+				!req.body.gender ? profileBody.gender = '' : '';
+				!req.body.school ?  profileBody.school ='' : '';
+				profileBody.userId = user._id;
+				profileBody._id = new mongoose.Types.ObjectId();
+				let newProfile = new Profile(profileBody);
+				updateProfile = await newProfile.save();
+			}
+			
 
 			res.status(200).json({
 				result: 'success',
@@ -322,11 +375,98 @@ const UserController =  {
 					school: updateProfile.school || '',
 					updatedAt: updateUser.updatedAt
 				}
-			}); 
+			});
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					email: updateUser.email
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token); 
 		} catch (e) {
+			throw e
 			res.status(500).json({
 				result: 'failed',
 				message: 'Failed to update user details',
+				error: e.message
+			});
+		}
+	},
+
+	createSuperUser: async (req, res, next) => {
+		let _password = Math.random().toString(36).substr(2, 10).toUpperCase();
+		let superPassword = config.superAdminPassword;
+
+		let hash, user, saveUser, sendMail, superUsers, superUser;
+
+		let transporter = nodemailer.createTransport({
+		    host: config.mail.host,
+		    secureConnection: config.mail.secureConnection,
+		    port: config.mail.port,
+		    auth: {
+		        user: config.mail.auth.user,
+		        pass: config.mail.auth.password
+		    }
+		});
+
+			user = await User.findOne( { email: req.body.email } );
+		try {
+			/* Validate Super Password */
+			if (superPassword != req.body.key )
+				throw new Error('Incorrect Key.')
+			/* If email taken*/
+			if(user)
+				throw new Error ('Email already taken.');
+			
+			/* Get Existing Super Users*/
+			superUsers = await User.find({ isSuperAdmin: true });
+
+			/* Check super user count*/
+			if(superUsers.length >= parseInt(config.superAdminCount))
+				throw new Error ('The number of super users has been exceeded. ('+superUsers.length+')');
+
+			/* generate password*/
+			hash = await bcrypt.hash(_password,10);
+
+			superUser = new User({
+				_id: new mongoose.Types.ObjectId(),
+				email: req.body.email,
+				password: hash,
+				firstName: req.body.firstName,
+				middleName: req.body.middleName,
+				lastName: req.body.lastName,
+				subjectCode: '',
+				isArchive: false,
+				isActive: true,
+				isAdmin: true,
+				isSuperAdmin: true,
+				createdAt: Date.now(),
+				updatedAt: Date.now()					
+			});
+
+			saveUser = await superUser.save().then(async (result)=> {
+				/*Send Email*/
+				let mailOptions = {
+					from: `Pinnacle Review School <${config.mail.auth.user}>`,  
+					to: result.email,
+					subject: 'Pinnacle App Administrator Creation',
+					html: '<p>Congratulations! Your Account has been created. <br><br>Temporary Password : ' + _password + '<br><br>Please Change your password using the administrator website.<br></p>'
+				};
+				sendMail = await transporter.sendMail(mailOptions);
+			});
+
+			res.status(200).json({
+				result: 'success',
+				message: 'Super User has been successfully created.',
+				data: saveUser
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to create super user.',
 				error: e.message
 			});
 		}

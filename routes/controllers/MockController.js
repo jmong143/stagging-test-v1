@@ -12,13 +12,20 @@ const User = require('../../models/Users');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
+const ActivityController = require('./ActivityController');
+
 const Config = require('../../config');
 
 const questionCount = parseInt(Config.questions.testCount);
 
+const tag = 'Mock Exam';
+
+const AuditTrail = require('./AuditTrailController');
+
 const MockController = {
 	// Admin Routes
 	createMock: async (req, res) => {
+		const action = 'Create Mock Exam';
 		let subject, mock, saveMock, exists, questions;
 		let validIds = [];
 		exists = await Mock.findOne({ subjectId: req.body.subjectId });
@@ -55,6 +62,16 @@ const MockController = {
 			});
 
 			saveMock = await mock.save();
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					subject: subject.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
+
 			res.status(200).json({
 				result: 'success',
 				message: 'Mock exam successfully created.',
@@ -68,14 +85,36 @@ const MockController = {
 			});
 		}
 	},
+
 	getMock: async (req, res) => {
-		let mock;
+		let mock, subjects;
 		try {
+			subjects = await Subject.find();
 			mock = await Mock.find();
+
+			let _tmp = {};
+
+			subjects.forEach((subject) => {
+				_tmp[subject._id] = subject.name;
+			});
+			let result = [];
+
+			mock.forEach((m)=> {
+				result.push({
+					_id: m._id,
+					subjectId: m.subjectId,
+					subjectName: _tmp[m.subjectId],
+					questions: m.questions,
+					createdAt: m.createdAt,
+					updatedAt: m.updatedAt,
+					isArchive: m.isArchive
+				});
+			});
+
 			res.status(200).json({
 				result: 'success',
 				message: 'Successfully get all mock exams.',
-				data: mock
+				data: result
 			});
 		} catch (e) {
 			res.status(500).json({
@@ -86,12 +125,40 @@ const MockController = {
 		}
 
 	},
+
+	getMockDetails: async(req, res) => {
+		let mock, subject;
+		try {
+			subject = await Subject.findOne({ _id: req.params.subjectId });
+			mock = await Mock.findOne({ subjectId: req.params.subjectId });
+
+			// validations
+			if(!subject)
+				throw new Error(`Subject doesn't exist.`);
+			if(!mock)
+				throw new Error(`Theres no mock exam for ${subject.name} yet.`);
+				
+			res.status(200).json({
+				result: 'success',
+				message: 'Successfully get mock exam details.',
+				data: mock
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: 'Failed to get mock exam details.',
+				error: e.message
+			});
+		}
+	},
+
 	updateMock: async (req, res) => {
-		let mock, updateMock, questions;
+		let mock, updateMock, questions, subject;
 		let validIds = [];
+		const action = 'Update Mock Exam';
 		try {
 			mock = await Mock.findOne({ _id: req.params.mockId });
-
+			subject = await Subject.findOne({ _id: mock.subjectId });
 			// Check duplicate entries on question array
 			if(!hasUnique(req.body.questions))
 				throw new Error("Duplicate questions are not allowed.")
@@ -115,6 +182,16 @@ const MockController = {
 				}},
 				{ new: true }
 			);
+
+			let log = {
+				module: tag,
+				action: action,
+				details: {
+					subject: subject.name
+				}
+			};
+
+			AuditTrail.addAuditTrail(log, req.headers.token);
 
 			res.status(200).json({
 				result: 'success',
@@ -201,6 +278,13 @@ const MockController = {
 			});
 
 			saveResult = await result.save();
+			
+			let details = {
+				module: tag,
+				subject: subject.name
+			};
+
+			ActivityController.addActivity(details, decoded._id);
 
 			res.status(200).json({
 				result: 'success',

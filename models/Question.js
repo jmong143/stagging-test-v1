@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const question = mongoose.Schema({
    _id: mongoose.Schema.Types.ObjectId,
+   tag: {type: String },
    question: { type: String, require: true },
    solution: { type: String },
    choices: { type: Array, required: true },
