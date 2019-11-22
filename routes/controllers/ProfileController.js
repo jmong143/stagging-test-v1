@@ -89,6 +89,7 @@ const ProfileController = {
 						_id: new mongoose.Types.ObjectId(),
 						userId: decoded._id,
 						birthDate: req.body.birthDate,
+						mobileNumber: req.body.mobileNumber,
 						gender: req.body.gender,
 						school: req.body.school
 					});

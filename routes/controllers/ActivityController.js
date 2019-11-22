@@ -42,7 +42,7 @@ const ActivityController = {
 
 		try {
 			decoded = await jwt.verify(token, config.secret);
-			recentActivity = await Activity.find({ userId: decoded._id}).sort({"date": -1});
+			recentActivity = await Activity.find({ userId: decoded._id}).sort({"date": -1}).limit(10);
 		} finally {
 			if (!decoded) {
 				res.status(401).json({
