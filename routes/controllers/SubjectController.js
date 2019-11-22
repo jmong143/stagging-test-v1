@@ -108,7 +108,7 @@ const SubjectController = {
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
 						isArchive: subject.isArchive,
-						numberOfQuestions: questionIds[subject._id],
+						numberOfQuestions: questionIds[subject._id] || 0,
 						questions: questions
 					});
 				});
@@ -140,7 +140,7 @@ const SubjectController = {
 						name: subject.name,
 						description: subject.description,
 						imageUrl: subject.imageUrl,
-						numberOfQuestions: questionIds[subject._id],
+						numberOfQuestions: questionIds[subject._id] || 0,
 						createdAt: subject.createdAt,
 						isArchive: subject.isArchive,
 						isEnrolled: isEnrolled 

@@ -9,6 +9,7 @@ const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');
 const News = require('../../models/News')
 const Activity = require('../../models/Activity');
+const Questions = require('../../models/Question');
 
 const Subject = require('../../models/Subject');
 
@@ -17,7 +18,8 @@ const HomepageController = {
 	getHomepage: async (req, res) => {
 
 		let token = req.headers['token'];
-		let decoded, user, profile, subjectCode, recent, news, subjects;
+		let decoded, user, profile, subjectCode, recent, news, subjects, questions;
+		let questionIds = {};
 		// Homepage Get
 		try {
 			decoded = await jwt.verify(token, config.secret);
@@ -27,6 +29,11 @@ const HomepageController = {
 			recent =  await Activity.find( { userId: decoded._id } ).sort({date: -1}).limit(9) || [];
 			news = await News.find({isArchive: false}).sort( { updatedAt: -1 } ).limit(9) || [];
 			subjects = await Subject.find();
+			questions = await Questions.find({ isArchive: false });
+
+			questions.forEach((question)=> {
+				questionIds[question.subjectId] ? questionIds[question.subjectId]++ : questionIds[question.subjectId] = 1
+			});
 		} finally {
 			if (!decoded) {
 				res.status(401).json({
@@ -61,6 +68,7 @@ const HomepageController = {
 								id: s._id,
 								code: s.code,
 								name: s.name,
+								numberOfQuestions: questionIds[s._id] || 0,
 								imageUrl: s.imageUrl,
 								createdAt: s.createdAt
 							});

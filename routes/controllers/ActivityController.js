@@ -34,36 +34,26 @@ const ActivityController = {
 	getRecentActivities: async (req, res) => {
 		let recentActivity, decoded;
 		let newBody = {
-			result: "",
-			message: "",
-			data: []
+			
 		};
 		let token = req.headers['token'];
 
 		try {
 			decoded = await jwt.verify(token, config.secret);
 			recentActivity = await Activity.find({ userId: decoded._id}).sort({"date": -1}).limit(10);
-		} finally {
-			if (!decoded) {
-				res.status(401).json({
-					message: 'Unauthorized.'
-				});
-			} else if (!recentActivity){
-				res.status(200).json(newBody);
-			} else if (recentActivity){
-				newBody.result = "success",
-				newBody.message = "Successfully get recent activities."
-				await recentActivity.forEach((activity)=> {
-					newBody.data.push({
-						id: activity._id,
-						details: activity.details,
-						date: activity.date
-					});
-				});
-				res.status(200).json(newBody);
-			}
-		}
-
+			
+			res.status(200).json({
+				result: "success",
+				message: "Successfully get recent activities.",
+				data: recentActivity
+			});
+		} catch(e) {
+			res.status(500).json({
+				result: "failed",
+				message: 'Failed to get recent activities.',
+				error: e.message
+			});
+		} 
 	}
 }
 

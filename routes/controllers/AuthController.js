@@ -108,73 +108,79 @@ const AuthController = {
 	// Register Via APP
 	register: async (req, res) => {
 		
-		let hash, user;
+		let hash, user, validation, saveUser;
 
+		user = await User.findOne({email: req.body.email});
 		try {
-			user = await User.findOne({email: req.body.email});
+
+			validation = await validateField((req.body.email), 'email');
 			hash = await bcrypt.hash(req.body.password, 10);
-		} finally {
 
-			if(user) {
-				res.status(400).json({
-					message: 'Email already taken.'
-				});
-			} else if(!hash) {
-				res.status(500).json({
-					message: 'Internal Server Error'
-				});
-			} else {
-				const _user = new User({
-					_id: new  mongoose.Types.ObjectId(),
-					email: req.body.email,
-					password: hash,
-					firstName: req.body.firstName,
-					lastName: req.body.lastName,
-					subjects: req.body.subjectCode || '',
-					isAdmin: false					
-				});
+			/* User already exists / Taken Email */
+			if(user) 
+				throw new Error('Email already taken.');
 
-				await _user.save();
-				res.status(200).json({
-					message: 'New user has been created.'
-				});
-			}
+			const _user = new User({
+				_id: new  mongoose.Types.ObjectId(),
+				email: req.body.email,
+				password: hash,
+				firstName: req.body.firstName,
+				lastName: req.body.lastName,
+				subjects: req.body.subjectCode || '',
+				isAdmin: false					
+			});
+
+			saveUser = await _user.save();
+			res.status(200).json({
+				result: 'success',
+				message: 'New user has been created.',
+				data: saveUser
+			});
+		} catch(e) {
+			res.status(500).json({
+				result:'failed',
+					message: 'Failed to create a new account',
+					error: e.message
+			});
 		}
 	},
 
 	// Create Admin Account
 	adminRegister: async (req, res) => {
 
-		let hash, user;
+		let hash, user, validation, saveUser;
+		user = await User.findOne({email: req.body.email});
 
 		try {
-			user = await User.findOne({email: req.body.email});
-			hash = await bcrypt.hash(req.body.password, 10);
-		} finally {
-			if(user) {
-				res.status(400).json({
-					message: 'Email already taken.'
-				});
-			} else if(!hash) {
-				res.status(500).json({
-					message: 'Internal Server Error'
-				});
-			} else {
-				const _user = new User({
-					_id: new  mongoose.Types.ObjectId(),
-					email: req.body.email,
-					password: hash,
-					firstName: req.body.firstName,
-					lastName: req.body.lastName,
-					subjectCode: "N/A",
-					isAdmin: true					
-				});
 
-				await _user.save();
-				res.status(200).json({
-					message: 'New admin user has been created.'
-				});
-			}
+			validation = await validateField((req.body.email), 'email');
+			hash = await bcrypt.hash(req.body.password, 10);
+			/* User already exists / Taken Email */
+			if(user) 
+				throw new Error('Email already taken.');
+
+			const _user = new User({
+				_id: new  mongoose.Types.ObjectId(),
+				email: req.body.email,
+				password: hash,
+				firstName: req.body.firstName,
+				lastName: req.body.lastName,
+				subjectCode: "N/A",
+				isAdmin: true					
+			});
+
+			saveUser = await _user.save();
+			res.status(200).json({
+				result: 'success',
+				message: 'New admin user has been created.',
+				data: saveUser
+			});
+		} catch(e) {
+			res.status(500).json({
+				result:'failed',
+					message: 'Failed to create a new admin account',
+					error: e.message
+			});
 		}
 	},
 
@@ -341,6 +347,18 @@ const AuthController = {
 			});
 		}
 	}
+}
+
+function validateField (string, type) {
+	return new Promise((resolve, reject) => {
+		switch (type.toUpperCase()) {
+			case 'EMAIL':
+				return string.indexOf('@') > 0 && string.indexOf('.') > 0 ? resolve(true) : reject(new Error('Invalid Email Format'));
+				break;
+			default:
+			return true
+		}
+	});	
 }
 
 module.exports = AuthController;
