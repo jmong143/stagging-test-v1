@@ -21,7 +21,7 @@ const ProfileController = {
 			user = await User.findOne({ _id: decoded._id });
 			profile = await Profile.findOne({ userId: decoded._id}) || {};
 			subjectCode = await SubjectCode.findOne({ userId: decoded._id}) || {};
-		} finally {
+
 			res.status(200).json({
 				user: {
 					id: user._id,
@@ -29,6 +29,7 @@ const ProfileController = {
 					firstName: user.firstName || '',
 					lastName: user.lastName || '',
 					birthDate: profile.birthDate || '',
+					mobileNumber: profile.mobileNumber || '',
 					gender: profile.gender || '',
 					school: profile.school || '',
 					updatedAt: profile.updatedAt || '',
@@ -40,13 +41,20 @@ const ProfileController = {
 					expiresAt: subjectCode.expiresAt || ''
 				}
 			});
+
+		} catch(e) {
+			res.status(500).json({
+				result: 'failed',
+				message: `Failed to get user profile.`,
+				error: e.message
+			});
 		}
 	},
 
 	updateProfile: async (req, res) => {
 		// Update Profile
 		let token = req.headers['token'];
-		let decoded, checkProfile;
+		let decoded, checkProfile, updateProfile;
 		
 		try {
 			
@@ -63,14 +71,17 @@ const ProfileController = {
 				req.body.birthDate ? updateQuery.birthDate = req.body.birthDate : '';
 				req.body.gender ? updateQuery.gender = req.body.gender : '';
 				req.body.school ? updateQuery.school = req.body.school : '';
+				req.body.mobileNumber ? updateQuery.mobileNumber = req.body.mobileNumber : '';
 
-				await Profile.findOneAndUpdate(
+				updateProfile = await Profile.findOneAndUpdate(
 					{ userId: decoded._id },
 					{ "$set": updateQuery},
 					{ "new": true });
 
 				res.status(200).json({
-					message: 'Profile successfuly updated.'
+					result: 'success',
+					message: 'Profile successfuly updated.',
+					data: updateProfile
 				});
 			} else {
 				/* Create new Profile if no existing */
@@ -82,9 +93,11 @@ const ProfileController = {
 						school: req.body.school
 					});
 
-				await _profile.save() 
+				updateProfile = await _profile.save() 
 				res.status(200).json({
-					message: 'Profile has been created.'
+					result: 'success',
+					message: 'Profile has been created.',
+					data: updateProfile
 				});
 			}	
 		}

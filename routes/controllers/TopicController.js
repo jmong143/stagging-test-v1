@@ -70,6 +70,7 @@ const TopicController = {
 	getTopics: async (req, res) => {
 		let token = req.headers['token'];
 		let subject, topics, user, decoded, questions;
+		let questionIds = {};
 		let data = [];
 		let query = { 
 			$and: [
@@ -87,7 +88,10 @@ const TopicController = {
 
 			subject = await Subject.findOne( { _id: req.params.subjectId } );
 			topics = await Topic.find(query);
-			questions = await Question.find().distinct('topicId');
+			questions = await Question.find({ subjectId: subject._id, isArchive: false });
+			questions.forEach((question) => {
+				questionIds[question.topicId] ? questionIds[question.topicId]++ : questionIds[question.topicId] = 1
+			});
 		} finally {
 
 			if (!decoded) {
@@ -107,11 +111,11 @@ const TopicController = {
 				});
 			} else {
 				topics.forEach((topic) => {
-					let hasQuestions = questions.indexOf(topic.id) != -1 ?  true : false;
 					data.push({
 						id: topic._id,
 						topicNumber: topic.topicNumber,
-						hasQuestions: hasQuestions,
+						hasQuestions: !!questionIds[topic._id],
+						numberOfQuestions: questionIds[topic._id] || 0,
 						description: topic.description,
 						subjectId: topic.subjectId,
 						lessons: topic.lessons,

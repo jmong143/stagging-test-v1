@@ -9,6 +9,7 @@ const SubjectCode = require('../../models/SubjectCode');
 const User = require('../../models/Users');
 const config = require('../../config').auth; 
 const SubjectUpdates = require('../../models/SubjectUpdates');
+const Questions = require('../../models/Question');
 const AuditTrail = require('./AuditTrailController');
 const tag = 'Subjects'
 const SubjectController = {
@@ -52,12 +53,18 @@ const SubjectController = {
 	getSubjects: async (req, res) => {
 
 		let token = req.headers['token'];
-		let decoded, user, subjectCode, subjects;
+		let decoded, user, subjectCode, subjects, questions;
+		let questionIds = {};
 		try {
 			decoded = await jwt.verify(token, config.secret);
 			user = await User.findOne({ _id: decoded._id });
 			subjectCode = await SubjectCode.findOne({ subjectCode: user.subjectCode }); 
 			subjects = await Subject.find({ isArchive: false }).sort({ createdAt: -1 });
+			questions = await Questions.find({ isArchive: false });
+
+			questions.forEach((question)=> {
+				questionIds[question.subjectId] ? questionIds[question.subjectId]++ : questionIds[question.subjectId] = 1
+			});
 		} finally {
 			if (!decoded || !user) {
 				res.status(401).json({
@@ -78,7 +85,8 @@ const SubjectController = {
 						description: subject.description,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isArchive: subject.isArchive
+						isArchive: subject.isArchive,
+						numberOfQuestions: questionIds[subject._id] || 0
 					});
 				});
 				res.status(200).json({
@@ -99,7 +107,9 @@ const SubjectController = {
 						description: subject.description,
 						imageUrl: subject.imageUrl,
 						createdAt: subject.createdAt,
-						isArchive: subject.isArchive
+						isArchive: subject.isArchive,
+						numberOfQuestions: questionIds[subject._id],
+						questions: questions
 					});
 				});
 				res.status(200).json({
@@ -130,6 +140,7 @@ const SubjectController = {
 						name: subject.name,
 						description: subject.description,
 						imageUrl: subject.imageUrl,
+						numberOfQuestions: questionIds[subject._id],
 						createdAt: subject.createdAt,
 						isArchive: subject.isArchive,
 						isEnrolled: isEnrolled 

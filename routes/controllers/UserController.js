@@ -118,6 +118,7 @@ const UserController =  {
 					lastName: user.lastName,
 					email: user.email,
 					birthDate: profile.birthDate || '',
+					mobileNumber: profile.mobileNumber || '',
 					gender: profile.gender || '',
 					school: profile.school || '',
 					subjectCode: user.subjectCode || '',
@@ -337,6 +338,7 @@ const UserController =  {
 			req.body.birthDate ? profileBody.birthDate = req.body.birthDate : '';
 			req.body.gender ? profileBody.gender = req.body.gender : '';
 			req.body.school ? profileBody.school = req.body.school : '';
+			req.body.mobileNumber ? profileBody.mobileNumber = req.body.mobileNumber : '',
 
 			updateUser = await User.findOneAndUpdate(
 				{ _id : user._id },
@@ -372,6 +374,7 @@ const UserController =  {
 					subjectCode: updateUser.subjectCode,
 					birthDate: updateProfile.birthDate || '',
 					gender: updateProfile.gender || '',
+					mobileNumber: updateProfile.mobileNumber || '',
 					school: updateProfile.school || '',
 					updatedAt: updateUser.updatedAt
 				}

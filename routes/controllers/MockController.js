@@ -28,15 +28,15 @@ const MockController = {
 		const action = 'Create Mock Exam';
 		let subject, mock, saveMock, exists, questions;
 		let validIds = [];
-		exists = await Mock.findOne({ subjectId: req.body.subjectId });
+		// exists = await Mock.findOne({ subjectId: req.body.subjectId });
 
 		try {
 			// Check if mock exam already exists
 			if(exists)
 				throw new Error("Mock exam already exsists. Use update instead.")
 			// Check duplicate entries on question array
-			if(!hasUnique(req.body.questions))
-				throw new Error("Duplicate questions are not allowed.")
+			// if(!hasUnique(req.body.questions))
+			// 	throw new Error("Duplicate questions are not allowed.")
 			// Check if subject Exsists
 			subject = await Subject.findOne({ _id: req.body.subjectId });
 			if (!subject)
@@ -55,6 +55,7 @@ const MockController = {
 			mock = new Mock({
 				_id: new mongoose.Types.ObjectId(),
 				subjectId: req.body.subjectId,
+				setNumber: req.body.setNumber,
 				questions: req.body.questions,
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
@@ -103,6 +104,7 @@ const MockController = {
 				result.push({
 					_id: m._id,
 					subjectId: m.subjectId,
+					setNumber: m.setNumber,
 					subjectName: _tmp[m.subjectId],
 					questions: m.questions,
 					createdAt: m.createdAt,
@@ -127,21 +129,39 @@ const MockController = {
 	},
 
 	getMockDetails: async(req, res) => {
-		let mock, subject;
+		let mock, subject; 
+		let questionIds = {};
+		let response = [];
+
 		try {
 			subject = await Subject.findOne({ _id: req.params.subjectId });
-			mock = await Mock.findOne({ subjectId: req.params.subjectId });
+			mock = await Mock.find({ subjectId: req.params.subjectId });
+			questions = await Question.find({ subjectId: subject._id });
+
+			questions.forEach((question) => {
+				questionIds[question._id] = question;
+			});
 
 			// validations
 			if(!subject)
 				throw new Error(`Subject doesn't exist.`);
 			if(!mock)
 				throw new Error(`Theres no mock exam for ${subject.name} yet.`);
-				
+			
+			mock.forEach((m) => {
+				let _m = m;
+				let tmpQuestions = [];
+				m.questions.forEach((q)=> {
+					tmpQuestions.push(questionIds[q]);
+				});
+				_m.questions = tmpQuestions;
+				response.push(_m);
+			});
+
 			res.status(200).json({
 				result: 'success',
 				message: 'Successfully get mock exam details.',
-				data: mock
+				data: response
 			});
 		} catch(e) {
 			res.status(500).json({
@@ -213,16 +233,20 @@ const MockController = {
 		let subject, mock, questions, newBody;
 		try {
 			subject = await Subject.findOne({ _id: req.params.subjectId });
-			mock = await Mock.findOne({ subjectId: req.params.subjectId });
-			if (!mock)
+			mock = await Mock.aggregate([
+				{ $match: { subjectId: req.params.subjectId }},
+				{ $sample: { size: 1 }}
+			]);
+			if (!mock[0])
 				throw new Error('There is no mock exam in this subject yet.')
 			// get questions, exclude solutions and answers
-			questions = await Question.find({_id: { $in: mock.questions }}, {answer: 0, solution: 0});
+			questions = await Question.find({_id: { $in: mock[0].questions }}, {answer: 0, solution: 0});
 			newBody = {
 				result: 'success',
 				message: 'Successfully generated Mock Exam.',
 				data: {
 					subject: subject.name,
+					setNumber: mock[0].setNumber || 0,
 					description: 'Mock Exam',
 					numberOfQuestions: questions.length,
 					questions: questions

@@ -34,11 +34,14 @@ const TestController = {
 			numberOfQuestions = parseInt(req.query.numberOfQuestions);
 		
 		try {
-			console.log(numberOfQuestions);
 			topic = await Topic.findOne({ _id: req.params.topicId });
 			if (!topic) 
 				throw new Error('Topic not found.')
-			questions = await Question.aggregate([ {$sample: {size: numberOfQuestions}} ]); 
+			questions = await Question.aggregate([ 
+				{ $match: { topicId: topic.id }},
+				{ $sample: { size: numberOfQuestions }} 
+			]); 
+
 			data.items = questions;
 			data.total = questions.length;
 			res.status(200).json({
