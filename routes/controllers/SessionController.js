@@ -21,18 +21,17 @@ const SessionController = {
 		try {
 			const decoded = await jwt.verify(token, config.secret);
 			const user = await User.findOne({ _id: decoded._id });
-
+			if(token !== user.token)
+				throw new Error ('token expired.');
 			if (user.isAdmin === false) {
 				next();
 			} else {
-				res.status(401).send({ 
-					message: 'Unauthorized.' 
-				});
+				throw new Error('Unauthorized')
 			}
 
 		} catch (e) {
 			res.status(401).send({ 
-				message: 'Unauthorized.' 
+				message: e.message 
 			});
 		}
 	},

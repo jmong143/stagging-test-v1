@@ -19,41 +19,41 @@ const AuthController = {
 			
 			user = await User.findOne({email: req.body.email});
 			hash = await bcrypt.compare(req.body.password, user.password);
-
-		} finally {
-			// Validate if User exists and password is correct.
 			if (!user || !hash) {
-				res.status(401).json({
-					message: 'Username/Password is incorrect.'
-				});
+				throw new Error('Username/Password is incorrect.')
 			} else if(user.isAdmin === true) {	
-				res.status(401).json({
-					message: 'Unauthorized.'
-				});
+				throw new Error('Unauthorized')
 			} else if (user.isArchive === true) {
-				res.status(401).json({
-					message: 'Account deactivated.'
-				});
-			} else if (user && hash) {
-				const JWTToken =  await jwt.sign({
-					email: user.email,
-					_id: user._id
-				},
-				clientSecret,
-				{
-					expiresIn: 43200 
-				});
-					// 86400 = 24hrs
-				res.status(200).json({
-					token: JWTToken,
-					user: user.email,
-					expiresIn: new Date(Date.now()+(43200*1000))
-				});
-			} else {
-				res.status(500).json({
-					message: 'Someting went wrong'
-				});
+				throw new Error('Account deactivated.')
 			}
+
+			const JWTToken =  await jwt.sign({
+				email: user.email,
+				_id: user._id
+			},
+			clientSecret,
+			{
+				expiresIn: 43200 
+			});
+				// 86400 = 24hrs
+
+			await User.findOneAndUpdate(
+				{ _id: user._id },
+				{ "$set": {
+					token: JWTToken
+				}}, { "new": true }
+			);
+
+			res.status(200).json({
+				token: JWTToken,
+				user: user,
+				expiresIn: new Date(Date.now()+(43200*1000))
+			});
+
+		} catch(e) {
+			res.status(500).json({
+				message: e.message
+			});
 		}
 	},
 

@@ -13,7 +13,8 @@ const user = mongoose.Schema({
    createdAt: { type: Date },
    updatedAt: { type: Date },
    isActive: {type: Boolean, default: true},
-   isArchive: { type: Boolean, default: false}
+   isArchive: { type: Boolean, default: false},
+   token: { type: String }
 });
 
 module.exports = mongoose.model('User', user);
