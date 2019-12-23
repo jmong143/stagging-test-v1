@@ -15,10 +15,11 @@ const AuthController = {
 
 		let clientSecret = req.headers['x-client-secret'];
 		let user, hash;
+
 		try {
-			
-			user = await User.findOne({email: req.body.email});
-			hash = await bcrypt.compare(req.body.password, user.password);
+			user = await User.findOne({email: req.body.email}) || {}; 	
+			hash = user.password ? await bcrypt.compare(req.body.password, user.password) : false;
+
 			if (!user || !hash) {
 				throw new Error('Username/Password is incorrect.')
 			} else if(user.isAdmin === true) {	
