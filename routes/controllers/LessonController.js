@@ -17,6 +17,9 @@ const LessonController = {
 			
 		try {
 			topic = await Topic.findOne({ _id: req.params.topicId });
+			if (topic.lessons.length > 0)
+				throw new Error(`Lesson for ${topic.description} already exists. Use update instead.`);
+
 			lesson = new Lesson({
 				_id: new mongoose.Types.ObjectId(),
 				name: req.body.name,

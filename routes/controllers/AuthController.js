@@ -51,7 +51,7 @@ const AuthController = {
 			});
 
 		} catch(e) {
-			res.status(500).json({
+			res.status(401).json({
 				message: e.message
 			});
 		}

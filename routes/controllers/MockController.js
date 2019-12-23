@@ -32,8 +32,10 @@ const MockController = {
 
 		try {
 			// Check if mock exam already exists
-			if(exists)
-				throw new Error("Mock exam already exsists. Use update instead.")
+			// if(exists)
+			// 	throw new Error("Mock exam already exsists. Use update instead.")
+
+
 			// Check duplicate entries on question array
 			// if(!hasUnique(req.body.questions))
 			// 	throw new Error("Duplicate questions are not allowed.")
@@ -75,7 +77,7 @@ const MockController = {
 
 			res.status(200).json({
 				result: 'success',
-				message: 'Mock exam successfully created.',
+				message: `Mock exam for ${subject.name} has been successfully created.`,
 				data: saveMock
 			});
 		} catch (e) {
@@ -260,6 +262,7 @@ const MockController = {
 			});
 		}
 	},
+
 	submit: async (req, res) => {
 		let mock, questionsIds, questions, decoded, user, result, saveResult, subject;
 		let score = 0;

@@ -10,6 +10,7 @@ const User = require('../../models/Users');
 const News = require('../../models/News')
 const Activity = require('../../models/Activity');
 const Questions = require('../../models/Question');
+const Mock = require('../../models/Mock');
 
 const Subject = require('../../models/Subject');
 
@@ -18,8 +19,9 @@ const HomepageController = {
 	getHomepage: async (req, res) => {
 
 		let token = req.headers['token'];
-		let decoded, user, profile, subjectCode, recent, news, subjects, questions;
+		let decoded, user, profile, subjectCode, recent, news, subjects, questions, mocks;
 		let questionIds = {};
+		let mockObj = {};
 		// Homepage Get
 		try {
 			decoded = await jwt.verify(token, config.secret);
@@ -30,11 +32,18 @@ const HomepageController = {
 			news = await News.find({isArchive: false}).sort( { updatedAt: -1 } ).limit(9) || [];
 			subjects = await Subject.find();
 			questions = await Questions.find({ isArchive: false });
+			mocks = await Mock.find();
 
 			questions.forEach((question)=> {
-				questionIds[question.subjectId] ? questionIds[question.subjectId]++ : questionIds[question.subjectId] = 1
+				questionIds[question.subjectId] ? questionIds[question.subjectId]++ : questionIds[question.subjectId] = 1;
 			});
+
+			mocks.forEach((mock) => {
+				mockObj[mock.subjectId] ? mockObj[mock.subjectId]++ : mockObj[mock.subjectId] = 1; 
+			});
+
 		} finally {
+			// console.log(mockObj);
 			if (!decoded) {
 				res.status(401).json({
 					message: "Unauthorized"
@@ -69,6 +78,7 @@ const HomepageController = {
 								code: s.code,
 								name: s.name,
 								numberOfQuestions: questionIds[s._id] || 0,
+								hasMock: mockObj[s._id] ? true : false,
 								imageUrl: s.imageUrl,
 								createdAt: s.createdAt
 							});
