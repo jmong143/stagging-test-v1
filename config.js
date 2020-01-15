@@ -34,7 +34,15 @@ const Config = {
 		defaultItemsPerPage: process.env.PAGINATION_DEFAULT
 	},
 	superAdminCount: process.env.SUPER_ADMIN_COUNT,
-	superAdminPassword: process.env.SUPER_ADMIN_PASSWORD
+	superAdminPassword: process.env.SUPER_ADMIN_PASSWORD,
+	digitalOcean: {
+		id: process.env.DO_ID,
+		secret: process.env.DO_SECRET,
+		endpoint: process.env.DO_ENDPOINT,
+		bucket: process.env.DO_BUCKET,
+		useAccelerateEndpoint: process.env.DO_USE_ACCELERATE_ENDPOINT,
+		acl: process.env.DO_FILES_ACL
+	}
 }
 
 module.exports = Config;

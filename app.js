@@ -48,6 +48,7 @@ app.use('/mock', require('./routes/mock'));
 app.use('/progress', require('./routes/progress'));
 app.use('/topics', require('./routes/lesson'));
 app.use('/audit/trail', require('./routes/auditTrail'));
+app.use('/v2/uploads', require('./routes/uploadsv2'));
 
 /* API Status*/
 app.get('/status', function(req, res){
